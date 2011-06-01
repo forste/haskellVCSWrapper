@@ -1,10 +1,10 @@
 Version of workspace file format:
                1
 Time of storage:
-               "Wed Jun  1 15:34:00 CEST 2011"
+               "Wed Jun  1 15:35:32 CEST 2011"
 Name of the workspace:
                "vcswrapper"
 File paths of contained packages:
-               ["svntest/svntest.cabal","svn/svn.cabal"]
+               ["git/git.cabal","svntest/svntest.cabal","svn/svn.cabal"]
 Maybe file path of an active package:
-               Just "svntest/svntest.cabal"
+               Just "git/git.cabal"
