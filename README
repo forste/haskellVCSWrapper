@@ -1,0 +1,2 @@
+This repository contains haskell wrappers for using various version control
+systems. Currently only git and svn are implemented.
