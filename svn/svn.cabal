@@ -7,9 +7,9 @@ license-file: ""
 copyright:
 maintainer:
 build-depends: MissingH -any, base -any, base -any, base -any,
-               base -any, haskell98 -any, haskell98 -any, haskell98 -any,
-               haskell98 -any, mtl -any, mtl -any, mtl -any, mtl -any,
-               process -any, process -any, process -any, process -any
+               base -any, common -any, haskell98 -any, haskell98 -any,
+               haskell98 -any, haskell98 -any, mtl -any, mtl -any, mtl -any,
+               mtl -any, process -any, process -any, process -any, process -any
 stability:
 homepage:
 package-url:

@@ -12,9 +12,16 @@
 --
 -----------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving #-}
-module Lib.Svn.Types where
+module Lib.Svn.Types (
+    module Common.Types,
+    Config (..),
+    makeConfig,
+    SvnCtx (SvnCtx),
+    SvnFailure
+) where
 
 import Control.Monad.Reader
+import Common.Types
 
 data Config = Config
     { configCwd :: Maybe FilePath
@@ -28,9 +35,6 @@ makeConfig path svnPath svnadminPath = Config {
         configSvnPath = svnPath,
         configSvnadminPath = svnadminPath
         }
-
-data Modification = None | Added | Deleted | Modified | Replaced | Untracked | Unknown
-    deriving (Eq)
 
 newtype SvnCtx a = SvnCtx (ReaderT Config IO a)
     deriving (Monad, MonadIO, MonadReader Config)

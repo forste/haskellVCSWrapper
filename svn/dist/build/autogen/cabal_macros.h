@@ -14,6 +14,13 @@
   (major1) == 4 && (major2) <  3 || \
   (major1) == 4 && (major2) == 3 && (minor) <= 1)
 
+/* package common-0.0.1 */
+#define VERSION_common "0.0.1"
+#define MIN_VERSION_common(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  0 || \
+  (major1) == 0 && (major2) == 0 && (minor) <= 1)
+
 /* package haskell98-1.1.0.1 */
 #define VERSION_haskell98 "1.1.0.1"
 #define MIN_VERSION_haskell98(major1,major2,minor) (\
