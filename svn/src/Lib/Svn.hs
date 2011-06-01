@@ -30,7 +30,7 @@ import Data.List.Utils
 
 
 {- create a new repository - TODO complete implementation -}
-createRepo :: SvnCtx ()
+createRepo :: Ctx ()
 createRepo = do
     o <- svnadminExec "create" [] []
     case o of
@@ -42,7 +42,7 @@ checkout ::  Maybe String               -- username
          -> [(String, Maybe String)]    -- list of (url, revision), must not be empty - revision must not be set
          -> Maybe String                -- path
          -> [String]                    -- options
-         -> SvnCtx ()
+         -> Ctx ()
 checkout username repos path options = do
 --    let name = "--username " ++ fromMaybe "anonymous" username ++ " " TODO comment in
     let urls = map  (\(x,y) -> x
@@ -57,7 +57,7 @@ commit :: [FilePath]  -- files to commit
          -> String      -- author
          -> String      -- message
          -> [String]    -- options, may be empty
-         -> SvnCtx ()
+         -> Ctx ()
 commit rsrcs author logmsg extraopts = do
     let authopts = [ "--username", author]
     let msgopts = [ "--message", logmsg ]
@@ -67,11 +67,11 @@ commit rsrcs author logmsg extraopts = do
 {- add filepaths to repository -}
 add :: [FilePath] -- files to add
         -> [String] -- options
-        -> SvnCtx ()
+        -> Ctx ()
 add files options= execute "add" $ files++options
 
 status :: [String] -- options
-         -> SvnCtx [(String, Modification)]
+         -> Ctx [(String, Modification)]
 status options = do
         o <- svnExec "status" options []
         case o of
@@ -111,7 +111,7 @@ mapCharToModification _   = Unknown
 {- execute given svn command with given options -}
 execute :: String -- command name
         -> [String] -- options
-        -> SvnCtx ()
+        -> Ctx ()
 execute commandName options = do
         o <- svnExec commandName options []
         case o of

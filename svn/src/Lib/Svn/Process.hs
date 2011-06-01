@@ -66,16 +66,16 @@ readProc mcwd command args menv input = do
 
 -- | internal function to execute a svnadmin command
 svnadminExec :: String -> [String] -> [(String, String)]
-        -> SvnCtx (Either SvnFailure String)
+        -> Ctx (Either SvnFailure String)
 svnadminExec cmd opts menv = exec cmd opts menv "svnadmin" configSvnadminPath
 
 -- | internal function to execute a svn command
 svnExec :: String -> [String] -> [(String, String)]
-        -> SvnCtx (Either SvnFailure String)
+        -> Ctx (Either SvnFailure String)
 svnExec cmd opts menv = exec cmd opts menv "svn" configSvnPath
 
 exec :: String -> [String] -> [(String, String)] -> String -> (Config -> Maybe FilePath)
-     -> SvnCtx (Either SvnFailure String)
+     -> Ctx (Either SvnFailure String)
 exec cmd opts menv fallBackExecutable getter = do
     cfg <- ask
     let args = cmd : opts
@@ -87,8 +87,8 @@ exec cmd opts menv fallBackExecutable getter = do
 
 {-| Run a svn context from a config and returns the result
  -}
-runSvn :: Config -> SvnCtx t -> IO t
-runSvn config (SvnCtx a) = runReaderT a config
+runSvn :: Config -> Ctx t -> IO t
+runSvn config (Ctx a) = runReaderT a config
 
 -- | internal function to call on failure to make a friendly error message
 svnError :: SvnFailure -> String -> b
