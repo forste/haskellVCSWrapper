@@ -15,21 +15,11 @@
 module Common.Types (
     mapModificationToString,
     mapStringToModification,
-    Modification (..),
-    Config (..),
-    Ctx (..)
+    Modification (..)
 ) where
-
-import Control.Monad.Reader
 
 data Modification = None | Added | Deleted | Modified | Replaced | Untracked | Unknown
     deriving (Eq)
-
-data Config = Config
-    { configCwd :: Maybe FilePath
-    , configSvnPath :: Maybe FilePath
-    , configSvnadminPath :: Maybe FilePath
-    } deriving (Show)
 
 mapModificationToString :: Modification -> String
 mapModificationToString modification = head $ [name | (name, mod) <- modificationAndNames, mod == modification]
@@ -49,5 +39,4 @@ modificationAndNames = [
                         ("Unknown",Unknown)
                         ]
 
-newtype Ctx a = Ctx (ReaderT Config IO a)
-    deriving (Monad, MonadIO, MonadReader Config)
+
