@@ -21,8 +21,15 @@ import Lib.Svn
 main = do
     putStrLn "Starting!"
 --    runWithConfig $ checkout (Just "hans") [(url, Nothing)] (Just targetDirectory) []
-    files <- runWithConfig $ status []
-    putStrLn $ "Files: "++(concat $ map (\tupple@(file,mod) -> file++":"++(mapModificationToString mod)) files)
+--    runWithConfig $ add ["file10"] []
+--    runWithConfig $ commit [] "hansi" "commit" []
+    runWithConfig $ update
+--    runWithConfig $ unlock ["file10"]
+--    files <- runWithConfig $ status []
+--    putStrLn $ "Files: \n"
+--        ++(concat $
+--            map (\x -> show x++"\n")
+--                files)
     putStrLn "Done!"
 --    runWithConfig $ add ["file5"]
 --    runWithConfig $ commit ["file5"] "hansi" "first haskell commit" []

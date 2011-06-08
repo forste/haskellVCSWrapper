@@ -13,13 +13,16 @@
 -----------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
 module Lib.Svn (
-    add,
-    checkout,
-    commit,
-    execute,
-    status,
-    module Lib.Svn.Types,
-    module Lib.Svn.Process
+    add
+    ,checkout
+    ,commit
+    ,lock
+    ,unlock
+    ,update
+    ,execute
+    ,status
+    ,module Lib.Svn.Types
+    ,module Lib.Svn.Process
 ) where
 
 
@@ -28,14 +31,15 @@ import Lib.Svn.Types
 import Maybe
 import Data.List.Utils
 
+--
+--  SVN COMMANDS
+--
 
-{- create a new repository - TODO complete implementation -}
-createRepo :: Ctx ()
-createRepo = do
-    o <- svnadminExec "create" [] []
-    case o of
-        Right _ -> return ()
-        Left err -> svnError err "svnadmin create"
+{- add filepaths to repository -}
+add :: [FilePath] -- files to add
+        -> [String] -- options
+        -> Ctx ()
+add files options= execute "add" $ files++options
 
 {- checkout the index to some commit id creating potentially a branch -}
 checkout ::  Maybe String               -- username
@@ -52,10 +56,11 @@ checkout username repos path options = do
     let realPath = [fromMaybe "" path]
     execute "checkout" (options++urls++realPath)
 
-{- commit change to the repository with optional filepaths -}
-commit :: [FilePath]  -- files to commit
-         -> String      -- author
-         -> String      -- message
+{- commit changes to the repository -}
+commit :: [FilePath]  -- files to commit, may be empty if not empty only specified files will be
+                      -- commited
+         -> String      -- author, must not be empty
+         -> String      -- message, must not be empty
          -> [String]    -- options, may be empty
          -> Ctx ()
 commit rsrcs author logmsg extraopts = do
@@ -64,21 +69,51 @@ commit rsrcs author logmsg extraopts = do
     let opts = authopts ++ msgopts ++ extraopts ++ rsrcs
     execute "commit" opts
 
-{- add filepaths to repository -}
-add :: [FilePath] -- files to add
-        -> [String] -- options
-        -> Ctx ()
-add files options= execute "add" $ files++options
+-- create a new repository - TODO complete implementation
+createRepo :: Ctx ()
+createRepo = do
+    o <- svnadminExec "create" [] []
+    case o of
+        Right _ -> return ()
+        Left err -> svnError err "svnadmin create"
 
-status :: [String] -- options
-         -> Ctx [(String, Modification)]
-status options = do
-        o <- svnExec "status" options []
+-- locks given files
+lock :: [FilePath] -- files to lock, must not be empty
+        -> String  -- lock comment, may be empty
+        -> Ctx ()
+lock files comment = do
+        execute "lock" $ files++opts
+    where
+        opts = if comment==[] then [] else [ "--message", comment]
+
+-- Get status information which will be a list of (filepath, modification-status, isLocked).
+-- Options will be ignored.
+status :: [String] -- options, will be ignored
+         -> Ctx [SVNStatus]
+status _ = do
+        o <- svnExec "status" [] []
         case o of
             Right out  -> return $ parseStatusOut out
             Left err -> return $ svnError err "status"
 
-parseStatusOut :: String -> [(String, Modification)]
+-- unlocks given files
+unlock :: [FilePath] -- files to unlock, must not be empty
+          -> Ctx ()
+unlock files = do
+         execute "unlock" files
+
+-- updates the repository
+update :: Ctx ()
+update = do
+        execute "update" []
+
+
+--
+--  HELPERS
+--
+
+{- parses given argument. Argument is required to have same format as output from 'svn status' -}
+parseStatusOut :: String -> [SVNStatus]
 parseStatusOut out = parseRows rows
         where
             rows = init' splitRows
@@ -88,24 +123,39 @@ init' :: [a] -> [a]
 init' [] = []
 init' ls = init ls
 
-{- supports only first seven columns and filename so far -}
-parseRows :: [String] -> [(String, Modification)]
+{- parses given rows from 'svn status'. supports only first seven columns and filename so far -}
+parseRows :: [String] -> [SVNStatus]
 parseRows rows = map mapRow rows
     where
-        mapRow = (\row -> (getFileName row, mapCharToModification $ getModification row))
-        getModification = (\row -> row!!0) :: String -> Char
-        getFileName = (\row -> tail $ tail $ tail $ tail $ tail $ tail $ tail $ tail row) :: String -> String
+        mapRow = \row -> SVNStatus {
+                                      file=(getFileName row)
+                                      ,modification=(getModification row)
+                                      ,isLocked=(getLockStatus row)
+                                   }
+        getFileName = (\row -> tail $ tail $ tail $ tail $ tail $ tail $ tail $ tail row)
+                        :: String -> FilePath
+        getModification = (\row -> parseFirstCol $ row!!0) :: String -> Modification
+        getLockStatus = (\row -> parseSixthCol $ row!!5) :: String -> IsLocked
+--        getConflictingStatus = (\row -> parseSecondCol $ row!!1) :: String -> IsConflicting
 
 
-mapCharToModification :: Char -> Modification
-mapCharToModification ' ' = None
-mapCharToModification 'A' = Added
-mapCharToModification 'D' = Deleted
-mapCharToModification 'M' = Modified
-mapCharToModification 'R' = Replaced
-mapCharToModification '?' = Untracked
-mapCharToModification _   = Unknown
+parseFirstCol :: Char -> Modification
+parseFirstCol ' ' = None
+parseFirstCol 'A' = Added
+parseFirstCol 'C' = Conflicting
+parseFirstCol 'D' = Deleted
+parseFirstCol 'M' = Modified
+parseFirstCol 'R' = Replaced
+parseFirstCol '?' = Untracked
+parseFirstCol _   = Unknown
 
+parseSecondCol :: Char -> IsConflicting
+parseSecondCol 'C' = True
+parseSecondCol ' ' = False
+
+parseSixthCol :: Char -> IsLocked
+parseSixthCol 'K' = True
+parseSixthCol ' ' = False
 
 
 {- execute given svn command with given options -}

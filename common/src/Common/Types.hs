@@ -13,30 +13,32 @@
 -----------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving #-}
 module Common.Types (
-    mapModificationToString,
-    mapStringToModification,
-    Modification (..)
+    Modification (..),
+    SVNStatus (..),
+    IsLocked,
+    IsConflicting
 ) where
 
-data Modification = None | Added | Deleted | Modified | Replaced | Untracked | Unknown
-    deriving (Eq)
+data SVNStatus = SVNStatus
+    { file :: FilePath
+    , modification :: Modification
+    , isLocked :: IsLocked
+    }
+    deriving (Show,Read)
 
-mapModificationToString :: Modification -> String
-mapModificationToString modification = head $ [name | (name, mod) <- modificationAndNames, mod == modification]
-
-mapStringToModification :: String -> Modification
-mapStringToModification string = head $ [mod | (name, mod) <- modificationAndNames, name == string]
-
-
-modificationAndNames :: [(String,Modification)]
-modificationAndNames = [
-                        ("None",None),
-                        ("Added",Added),
-                        ("Deleted",Deleted),
-                        ("Modified",Modified),
-                        ("Replaced",Replaced),
-                        ("Untracked",Untracked),
-                        ("Unknown",Unknown)
-                        ]
+--instance Show SVNStatus where
+--    show status = file status ++ show (modification status) ++ show (lockStatus status)
 
 
+data Modification = None |
+                    Added |
+                    Conflicting |
+                    Deleted |
+                    Modified |
+                    Replaced |
+                    Untracked |
+                    Unknown
+    deriving (Eq,Show,Read)
+
+type IsLocked = Bool
+type IsConflicting = Bool
