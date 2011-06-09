@@ -13,10 +13,9 @@
 -----------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving #-}
 module Common.Types (
-    Modification (..),
-    SVNStatus (..),
-    IsLocked,
-    IsConflicting
+    Modification (..)
+    ,SVNStatus (..)
+    ,IsLocked
 ) where
 
 data SVNStatus = SVNStatus
@@ -25,10 +24,6 @@ data SVNStatus = SVNStatus
     , isLocked :: IsLocked
     }
     deriving (Show,Read)
-
---instance Show SVNStatus where
---    show status = file status ++ show (modification status) ++ show (lockStatus status)
-
 
 data Modification = None |
                     Added |
@@ -41,4 +36,3 @@ data Modification = None |
     deriving (Eq,Show,Read)
 
 type IsLocked = Bool
-type IsConflicting = Bool

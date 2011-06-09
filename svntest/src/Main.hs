@@ -23,13 +23,13 @@ main = do
 --    runWithConfig $ checkout (Just "hans") [(url, Nothing)] (Just targetDirectory) []
 --    runWithConfig $ add ["file10"] []
 --    runWithConfig $ commit [] "hansi" "commit" []
-    runWithConfig $ update
+--    runWithConfig $ update
 --    runWithConfig $ unlock ["file10"]
---    files <- runWithConfig $ status []
---    putStrLn $ "Files: \n"
---        ++(concat $
---            map (\x -> show x++"\n")
---                files)
+    files <- runWithConfig $ status []
+    putStrLn $ "Files:"
+        ++(concat $
+            map (\x -> "\n"++show x)
+                files)
     putStrLn "Done!"
 --    runWithConfig $ add ["file5"]
 --    runWithConfig $ commit ["file5"] "hansi" "first haskell commit" []

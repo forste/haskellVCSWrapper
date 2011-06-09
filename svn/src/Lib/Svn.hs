@@ -136,7 +136,6 @@ parseRows rows = map mapRow rows
                         :: String -> FilePath
         getModification = (\row -> parseFirstCol $ row!!0) :: String -> Modification
         getLockStatus = (\row -> parseSixthCol $ row!!5) :: String -> IsLocked
---        getConflictingStatus = (\row -> parseSecondCol $ row!!1) :: String -> IsConflicting
 
 
 parseFirstCol :: Char -> Modification
@@ -148,10 +147,6 @@ parseFirstCol 'M' = Modified
 parseFirstCol 'R' = Replaced
 parseFirstCol '?' = Untracked
 parseFirstCol _   = Unknown
-
-parseSecondCol :: Char -> IsConflicting
-parseSecondCol 'C' = True
-parseSecondCol ' ' = False
 
 parseSixthCol :: Char -> IsLocked
 parseSixthCol 'K' = True
