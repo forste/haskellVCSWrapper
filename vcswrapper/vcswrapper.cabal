@@ -7,10 +7,15 @@ license-file: ""
 copyright:
 maintainer:
 build-depends: MissingH -any, MissingH -any, MissingH -any,
+               MissingH -any, MissingH -any, MissingH -any, MissingH -any,
                MissingH -any, base -any, base -any, base -any, base -any,
+               base -any, base -any, base -any, base -any, directory -any,
                directory -any, haskell98 -any, haskell98 -any, haskell98 -any,
-               haskell98 -any, libgit -any, libgit -any, mtl -any, mtl -any,
+               haskell98 -any, haskell98 -any, haskell98 -any, haskell98 -any,
+               haskell98 -any, libgit -any, libgit -any, libgit -any, libgit -any,
+               mtl -any, mtl -any, mtl -any, mtl -any, mtl -any, mtl -any,
                mtl -any, mtl -any, process -any, process -any, process -any,
+               process -any, process -any, process -any, process -any,
                process -any
 stability:
 homepage:
@@ -25,7 +30,7 @@ data-files:
 data-dir: ""
 extra-source-files:
 extra-tmp-files:
-exposed-modules:
+exposed-modules: VCSWrapper.Git VCSWrapper.Svn
 exposed: True
 buildable: True
 build-tools:
@@ -46,7 +51,7 @@ includes:
 install-includes:
 include-dirs:
 hs-source-dirs: src
-other-modules: VCSWrapper VCSWrapper.Git VCSWrapper.Svn
+other-modules: VCSWrapper 
                VCSWrapper.Svn.Types VCSWrapper.Svn.Process VCSWrapper.Common.Types
 ghc-prof-options:
 ghc-shared-options:
@@ -76,7 +81,7 @@ includes:
 install-includes:
 include-dirs:
 hs-source-dirs: src
-other-modules: VCSWrapper VCSWrapper.Git VCSWrapper.Svn
+other-modules: VCSWrapper 
                VCSWrapper.Svn.Types VCSWrapper.Svn.Process VCSWrapper.Common.Types
 ghc-prof-options:
 ghc-shared-options:
