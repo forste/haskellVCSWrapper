@@ -38,23 +38,7 @@ import qualified Lib.Git as G
 import Lib.Git.Type
 
 import VCSWrapper.Git.Parsers
-
---import qualified SCM.Interface as IF
-
-data GitRepo = GitRepo FilePath -- ^ path to .git
-    String -- ^ Author
-    String -- ^ Author email
-    deriving (Show, Read)
-
-
-
---instance IF.ScmOperations GitRepo where
---    commit                      = commit
---    checkout                    = checkout
---    getLocalPath (GitRepo path) = path
---    getModifiedFiles repo       = do
---        status <- getStatus repo
---        return $ extractModifiedFiles status
+import VCSWrapper.Git.Types
 
 
 

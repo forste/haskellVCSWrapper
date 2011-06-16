@@ -15,38 +15,13 @@
 module VCSWrapper.Git.Parsers (
     parseStatus
     , parseSimpleLog
-    , GitStatus (..)
-    , GitLog (..)
-    , LogEntry (..)
 ) where
 
 import Data.List.Utils
 
 import Text.ParserCombinators.Parsec
 
-
--- | Represents the status of a git repo as lists of files
-data GitStatus = GitStatus {
-    modified :: [FilePath] -- ^ modified files
-    , untracked :: [FilePath] -- ^ untracked files
-    , added :: [FilePath] -- ^ added files
-    , removed :: [FilePath] -- ^ removed files
-} deriving (Show)
-
-
--- | Holds a list of log entries
-data GitLog = GitLog [LogEntry]
-    deriving (Show)
-
-data LogEntry = LogEntry {
-    commitID :: String
-    , author :: String
-    , email :: String
-    , date :: String
-    , subject :: String
-    , body :: String
-} deriving (Show)
-
+import VCSWrapper.Git.Types
 
 
 parseStatus :: String -> GitStatus
