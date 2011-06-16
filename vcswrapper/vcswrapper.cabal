@@ -6,17 +6,14 @@ license: AllRightsReserved
 license-file: ""
 copyright:
 maintainer:
-build-depends: MissingH -any, MissingH -any, MissingH -any,
-               MissingH -any, MissingH -any, MissingH -any, MissingH -any,
-               MissingH -any, base -any, base -any, base -any, base -any,
-               base -any, base -any, base -any, base -any, directory -any,
-               directory -any, haskell98 -any, haskell98 -any, haskell98 -any,
-               haskell98 -any, haskell98 -any, haskell98 -any, haskell98 -any,
-               haskell98 -any, libgit -any, libgit -any, libgit -any, libgit -any,
-               mtl -any, mtl -any, mtl -any, mtl -any, mtl -any, mtl -any,
-               mtl -any, mtl -any, process -any, process -any, process -any,
-               process -any, process -any, process -any, process -any,
-               process -any
+build-depends: MissingH -any,
+               base -any,
+               directory -any,
+               haskell98 -any,
+               libgit -any,
+               mtl -any,
+               process -any,
+               parsec -any
 stability:
 homepage:
 package-url:
@@ -53,6 +50,7 @@ include-dirs:
 hs-source-dirs: src
 other-modules: VCSWrapper 
                VCSWrapper.Svn.Types VCSWrapper.Svn.Process VCSWrapper.Common.Types
+               VCSWrapper.Git.Parsers
 ghc-prof-options:
 ghc-shared-options:
 ghc-options:
@@ -83,6 +81,7 @@ include-dirs:
 hs-source-dirs: src
 other-modules: VCSWrapper 
                VCSWrapper.Svn.Types VCSWrapper.Svn.Process VCSWrapper.Common.Types
+               VCSWrapper.Git.Parsers
 ghc-prof-options:
 ghc-shared-options:
 ghc-options:

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 --
--- Module      :  GitGui.Core
+-- Module      :  VCSWrapper.Git
 -- Copyright   :
 -- License     :  AllRightsReserved
 --
@@ -13,17 +13,21 @@
 -----------------------------------------------------------------------------
 
 module VCSWrapper.Git (
-    GitRepo
+    GitRepo (..) -- TODO remove this constructor again, somehow...
     , initRepo
 --    , cloneRepo
     , openRepo
     , status
+    , simpleLog
     , commit
     , checkout
     , modifiedFiles
     , untrackedFiles
     , addedFiles
     , removedFiles
+    , GitStatus
+    , GitLog (..)
+    , LogEntry (..)
 ) where
 
 import System.Directory
@@ -33,18 +37,16 @@ import Data.List.Utils
 import qualified Lib.Git as G
 import Lib.Git.Type
 
+import VCSWrapper.Git.Parsers
+
 --import qualified SCM.Interface as IF
 
-newtype GitRepo = GitRepo FilePath
+data GitRepo = GitRepo FilePath -- ^ path to .git
+    String -- ^ Author
+    String -- ^ Author email
+    deriving (Show, Read)
 
 
-{- | Represents the status of a git repo as lists of:
-| modified files
-| untracked files
-| added files
-| removed files
--}
-data GitStatus = GitStatus [FilePath] [FilePath] [FilePath] [FilePath] deriving (Show)
 
 --instance IF.ScmOperations GitRepo where
 --    commit                      = commit
@@ -56,16 +58,16 @@ data GitStatus = GitStatus [FilePath] [FilePath] [FilePath] [FilePath] deriving 
 
 
 
-commit :: GitRepo -> [FilePath] -> String -> String -> String -> IO ()
-commit _ [] _ _ _                                     = print "commit called, no files selected for commit, aborting"
-commit (GitRepo repoPath) files author email message  = do
+commit :: GitRepo -> [FilePath] -> String -> IO ()
+commit _ [] _                                     = print "commit called, no files selected for commit, aborting"
+commit (GitRepo repoPath author email) files message  = do
     runGit curConfig $ G.add files
     runGit curConfig $ G.commit files author email message []
     where
     curConfig = cfg repoPath
 
 checkout :: GitRepo -> String -> IO ()
-checkout (GitRepo repoPath) rev = do
+checkout (GitRepo repoPath _ _) rev = do
     G.runGit curConfig $ G.checkout (Just rev) Nothing
     where
     curConfig = cfg repoPath
@@ -87,7 +89,7 @@ removedFiles (GitStatus _ _ _ files) = files
 | modified, untracked, added and removed files
 -}
 status :: GitRepo -> IO GitStatus
-status (GitRepo path) = do
+status (GitRepo path _ _) = do
     let statusCmd = gitExec "status" ["--porcelain"] []
     rawStatus <- G.runGit (cfg path) statusCmd
     case rawStatus of
@@ -95,29 +97,36 @@ status (GitRepo path) = do
         Right status -> return $ parseStatus status
 
 
-parseStatus :: String -> GitStatus
-parseStatus status = GitStatus
-        -- TODO better performance if not using list comprehension?
-        [ xs | (_:x:_:xs) <- lines, x == 'M'] -- M only displayed in second column
-        [ xs | (x:_:_:xs) <- lines, x == '?']
-        [ xs | (x:_:_:xs) <- lines, x == 'A'] -- A only displayed in second column
-        [ xs | (x:y:_:xs) <- lines, x == 'D' || y == 'D'] -- D flag depends on index state (both columns)
-        where
-        lines = split "\n" status
+simpleLog :: GitRepo -> IO (Maybe GitLog)
+simpleLog (GitRepo path _ _) = do
+    let logCmd = gitExec "log" ["--pretty=tformat:commit:%H%n%an%n%ae%n%ai%n%s%n%b%x00"] []
+    rawLog <- G.runGit (cfg path) logCmd
+    case rawLog of
+        Left err -> gitError err "log"
+        Right log -> do
+--            liftIO $ putStrLn log
+            return $ parseSimpleLog log
+
 
 
 -- | initialize an empty git repository at specified FilePath
 -- | TODO wrap in MaybeT ?
-initRepo :: FilePath -> IO GitRepo
-initRepo path = do
+initRepo :: FilePath -- ^ .git
+     -> String -- ^ author
+     -> String -- ^ author email
+     -> IO GitRepo
+initRepo path author email = do
     G.runGit (cfg path) $ G.initDB False
-    return $ GitRepo path
+    return $ GitRepo path author email
 
 -- | TODO check if an initialized git repo is at specified path
 -- | TODO wrap in MaybeT ?
-openRepo :: FilePath -> IO GitRepo
-openRepo path = do
-    return $ GitRepo path
+openRepo :: FilePath -- ^ .git
+     -> String -- ^ author
+     -> String -- ^ author email
+     -> IO GitRepo
+openRepo path author email = do
+    return $ GitRepo path author email
 
 
 cfg :: FilePath -> Config
