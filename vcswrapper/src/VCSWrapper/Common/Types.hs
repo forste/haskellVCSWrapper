@@ -13,23 +13,26 @@
 -----------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving #-}
 module VCSWrapper.Common.Types (
-    Modification (..)
-    ,SVNStatus (..)
-    ,IsLocked
+    IsLocked
     ,LogEntry (..)
     ,Ctx(..)
     ,Config(..)
     ,VCSFailure
+    ,Status(..)
+    ,Modification(..)
     ,makeConfig
 ) where
 
 import Control.Monad.Reader
 
-data SVNStatus = SVNStatus
-    { file :: FilePath
-    , modification :: Modification
-    , isLocked :: IsLocked
-    }
+data Status = SVNStatus FilePath Modification IsLocked | GITStatus FilePath Modification
+--    { file :: FilePath
+--    , modification :: Modification
+--    , isLocked :: IsLocked
+--    } | GITStatus {
+--      file :: FilePath
+--    , modification :: Modification
+--    }
     deriving (Show,Read)
 
 data Modification = None |

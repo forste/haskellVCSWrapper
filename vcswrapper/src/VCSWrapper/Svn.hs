@@ -13,15 +13,20 @@
 -----------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
 module VCSWrapper.Svn (
+    -- svn commands
     add
     ,checkout
     ,commit
     ,lock
     ,unlock
     ,update
-    ,execute
     ,status
+
+    -- executers
+    ,execute
     ,module VCSWrapper.Svn.Process
+
+    --types
     ,module VCSWrapper.Svn.Types
 ) where
 
@@ -35,17 +40,17 @@ import Data.List.Utils
 --  SVN COMMANDS
 --
 
-{- add filepaths to repository -}
+{- Add filepaths to repository -}
 add :: [FilePath] -- files to add
         -> [String] -- options
         -> Ctx ()
 add files options= execute "add" $ files++options
 
-{- checkout the index to some commit id creating potentially a branch -}
-checkout ::  Maybe String               -- username
-         -> [(String, Maybe String)]    -- list of (url, revision), must not be empty - revision must not be set
-         -> Maybe String                -- path
-         -> [String]                    -- options
+{- Checkout the index to some commit id creating potentially a branch -}
+checkout ::  Maybe String               -- ^ username
+         -> [(String, Maybe String)]    -- ^ list of (url, revision), must not be empty - revision must not be set
+         -> Maybe String                -- ^ path
+         -> [String]                    -- ^ options
          -> Ctx ()
 checkout username repos path options = do
 --    let name = "--username " ++ fromMaybe "anonymous" username ++ " " TODO comment in
@@ -56,12 +61,12 @@ checkout username repos path options = do
     let realPath = [fromMaybe "" path]
     execute "checkout" (options++urls++realPath)
 
-{- commit changes to the repository -}
-commit :: [FilePath]  -- files to commit, may be empty if not empty only specified files will be
-                      -- commited
-         -> String      -- author, must not be empty
-         -> String      -- message, must not be empty
-         -> [String]    -- options, may be empty
+{- Commit changes to the repository -}
+commit :: [FilePath]  -- ^ files to commit, may be empty if not empty only specified files will be
+                      -- ^ commited
+         -> String      -- ^ author, must not be empty
+         -> String      -- ^ message, must not be empty
+         -> [String]    -- ^ options, may be empty
          -> Ctx ()
 commit rsrcs author logmsg extraopts = do
     let authopts = [ "--username", author]
@@ -77,7 +82,7 @@ commit rsrcs author logmsg extraopts = do
 --        Right _ -> return ()
 --        Left err -> svnError err "svnadmin create"
 
--- locks given files
+{- | Locks given files -}
 lock :: [FilePath] -- files to lock, must not be empty
         -> String  -- lock comment, may be empty
         -> Ctx ()
@@ -86,34 +91,43 @@ lock files comment = do
     where
         opts = if comment==[] then [] else [ "--message", comment]
 
--- Get status information which will be a list of (filepath, modification-status, isLocked).
--- Options will be ignored.
-status :: [String] -- options, will be ignored
-         -> Ctx [SVNStatus]
+{- | Get status information which will be a list of (filepath, modification-status, isLocked).
+   Options will be ignored. -}
+status :: [String] -- ^ Options, will be ignored
+         -> Ctx [Status]
 status _ = do
         o <- svnExec "status" [] []
         case o of
             Right out  -> return $ parseStatusOut out
             Left err -> return $ vcsError err "status"
 
--- unlocks given files
-unlock :: [FilePath] -- files to unlock, must not be empty
+{- | Unlocks given files -}
+unlock :: [FilePath] -- ^ Files to unlock, must not be empty
           -> Ctx ()
 unlock files = do
          execute "unlock" files
 
--- updates the repository
+{- | Updates the repository -}
 update :: Ctx ()
 update = do
         execute "update" []
 
-
+{- | Execute given svn command with given options handling eventual errors
+-}
+execute :: String -- command name
+        -> [String] -- options
+        -> Ctx ()
+execute commandName options = do
+        o <- svnExec commandName options []
+        case o of
+            Right _  -> return ()
+            Left err -> vcsError err commandName
 --
 --  HELPERS
 --
 
-{- parses given argument. Argument is required to have same format as output from 'svn status' -}
-parseStatusOut :: String -> [SVNStatus]
+-- parses given argument. Argument is required to have same format as output from 'svn status'
+parseStatusOut :: String -> [Status]
 parseStatusOut out = parseRows rows
         where
             rows = init' splitRows
@@ -123,20 +137,23 @@ init' :: [a] -> [a]
 init' [] = []
 init' ls = init ls
 
-{- parses given rows from 'svn status'. supports only first seven columns and filename so far -}
-parseRows :: [String] -> [SVNStatus]
+-- parses given rows from 'svn status'. Supports only first seven columns and filename so far
+parseRows :: [String] -> [Status]
 parseRows rows = map mapRow rows
     where
-        mapRow = \row -> SVNStatus {
-                                      file=(getFileName row)
-                                      ,modification=(getModification row)
-                                      ,isLocked=(getLockStatus row)
-                                   }
-        getFileName = (\row -> tail $ tail $ tail $ tail $ tail $ tail $ tail $ tail row)
-                        :: String -> FilePath
+        mapRow = \row -> SVNStatus (getFileName row) (getModification row)  (getLockStatus row)
+--        {
+--                                      file=(getFileName row)
+--                                      ,modification=(getModification row)
+--                                      ,isLocked=(getLockStatus row)
+--                                   }
+        getFileName = (\row -> nFunc tail 8 row) :: String -> FilePath
         getModification = (\row -> parseFirstCol $ row!!0) :: String -> Modification
         getLockStatus = (\row -> parseSixthCol $ row!!5) :: String -> IsLocked
 
+nFunc :: (a -> a) -> Int -> a -> a
+nFunc _ 0 = id
+nFunc f n = f . nFunc f (n-1)
 
 parseFirstCol :: Char -> Modification
 parseFirstCol ' ' = None
@@ -153,12 +170,4 @@ parseSixthCol 'K' = True
 parseSixthCol ' ' = False
 
 
-{- execute given svn command with given options -}
-execute :: String -- command name
-        -> [String] -- options
-        -> Ctx ()
-execute commandName options = do
-        o <- svnExec commandName options []
-        case o of
-            Right _  -> return ()
-            Left err -> vcsError err commandName
+
