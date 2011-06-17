@@ -23,7 +23,6 @@ module VCSWrapper.Svn (
     ,status
 
     -- executers
-    ,execute
     ,module VCSWrapper.Svn.Process
 
     --types
@@ -112,16 +111,6 @@ update :: Ctx ()
 update = do
         execute "update" []
 
-{- | Execute given svn command with given options handling eventual errors
--}
-execute :: String -- command name
-        -> [String] -- options
-        -> Ctx ()
-execute commandName options = do
-        o <- svnExec commandName options []
-        case o of
-            Right _  -> return ()
-            Left err -> vcsError err commandName
 --
 --  HELPERS
 --

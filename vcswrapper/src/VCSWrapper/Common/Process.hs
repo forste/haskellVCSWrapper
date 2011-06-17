@@ -54,6 +54,7 @@ exec cmd opts menv fallBackExecutable getter = do
         ExitSuccess   -> return $ Right out
         ExitFailure i -> return $ Left (i, out, err, fromMaybe "cwd not set" $ configCwd cfg, cmd : opts)
 
+
 {-| Run a vcs context from a config and returns the result
  -}
 runVcs :: Config -> Ctx t -> IO t
