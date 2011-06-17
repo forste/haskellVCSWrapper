@@ -1,117 +1,116 @@
 -----------------------------------------------------------------------------
 --
 -- Module      :  VCSWrapper.Git
--- Copyright   :
+-- Copyright   :  Copyright (C) 2009-2010 Vincent Hanquez
 -- License     :  AllRightsReserved
 --
--- Maintainer  :  Harald Jagenteufel
+--   Maintainer  : Vincent Hanquez <vincent@snarc.org>, modified Harald Jagenteufel
 -- Stability   :  experimental
 -- Portability :
 --
--- |
---
+-- | This module provide Git functionality exec'ing the git binary.
+-- give simple access to commit, tree, tag, blob objects.
 -----------------------------------------------------------------------------
 
 module VCSWrapper.Git (
---    GitRepo (..) -- TODO remove this constructor again, somehow...
---    , initRepo
-----    , cloneRepo
---    , openRepo
---    , status
---    , simpleLog
---    , commit
---    , checkout
---    , modifiedFiles
---    , untrackedFiles
---    , addedFiles
---    , removedFiles
---    , GitStatus
---    , GitLog (..)
---    , LogEntry (..)
+    initDB
+--    , cloneRepo
+    , status
+    , simpleLog
+    , commit
+    , checkout
+    , Status (..)
+    , LogEntry (..)
 ) where
 
 import System.Directory
 import Control.Monad.Trans
 import Data.List.Utils
 
-import qualified Lib.Git as G
-import Lib.Git.Type
-
 import VCSWrapper.Git.Parsers
-import VCSWrapper.Git.Types
+import VCSWrapper.Git.Process
+import VCSWrapper.Common.Types
+
+import Data.Maybe
+import qualified Data.List
 
 
+{- | initialize a new repository database -}
+initDB :: Bool -> Ctx ()
+initDB bare = do
+        let opts = if bare then ["--bare"] else []
+	o <- gitExec "init-db" opts []
+	case o of
+		Right _  -> return ()
+		Left err -> vcsError err "init-db"
 
---commit :: GitRepo -> [FilePath] -> String -> IO ()
---commit _ [] _                                     = print "commit called, no files selected for commit, aborting"
---commit (GitRepo repoPath author email) files message  = do
---    runGit curConfig $ G.add files
---    runGit curConfig $ G.commit files author email message []
---    where
---    curConfig = cfg repoPath
---
---checkout :: GitRepo -> String -> IO ()
---checkout (GitRepo repoPath _ _) rev = do
---    G.runGit curConfig $ G.checkout (Just rev) Nothing
---    where
---    curConfig = cfg repoPath
---
---
---modifiedFiles :: GitStatus -> [FilePath]
---modifiedFiles (GitStatus files _ _ _) = files
---
---untrackedFiles :: GitStatus -> [FilePath]
---untrackedFiles (GitStatus _ files _ _) = files
---
---addedFiles :: GitStatus -> [FilePath]
---addedFiles (GitStatus _ _ files _) = files
---
---removedFiles :: GitStatus -> [FilePath]
---removedFiles (GitStatus _ _ _ files) = files
---
---{- | return the status of given repo as lists of:
---   | modified, untracked, added and removed files
----}
---status :: GitRepo -> IO GitStatus
---status (GitRepo path _ _) = do
---    let statusCmd = gitExec "status" ["--porcelain"] []
---    rawStatus <- G.runGit (cfg path) statusCmd
---    case rawStatus of
---        Left err -> gitError err "status"
---        Right status -> return $ parseStatus status
---
---
---simpleLog :: GitRepo -> IO (Maybe GitLog)
---simpleLog (GitRepo path _ _) = do
---    let logCmd = gitExec "log" ["--pretty=tformat:commit:%H%n%an%n%ae%n%ai%n%s%n%b%x00"] []
---    rawLog <- G.runGit (cfg path) logCmd
---    case rawLog of
---        Left err -> gitError err "log"
---        Right log -> do
-----            liftIO $ putStrLn log
---            return $ parseSimpleLog log
---
---
---
----- | initialize an empty git repository at specified FilePath
----- | TODO wrap in MaybeT ?
---initRepo :: FilePath -- ^ .git
---     -> String -- ^ author
---     -> String -- ^ author email
---     -> IO GitRepo
---initRepo path author email = do
---    G.runGit (cfg path) $ G.initDB False
---    return $ GitRepo path author email
---
----- | TODO check if an initialized git repo is at specified path
----- | TODO wrap in MaybeT ?
+{- | add filepath to repository -}
+add :: [ FilePath ] -> Ctx ()
+add paths = do
+	let opts = "--" : paths
+	o <- gitExec "add" opts []
+	case o of
+		Right _  -> return ()
+		Left err -> vcsError err "add"
+
+{- | rm filepath from repository -}
+rm :: [ FilePath ] -> Ctx ()
+rm paths = do
+	let opts = "--" : paths
+	o <- gitExec "rm" opts []
+	case o of
+		Right _  -> return ()
+		Left err -> vcsError err "rm"
+
+{- | commit change to the repository with optional filepaths -}
+commit :: [ FilePath ] -> String -> String -> String -> [String] -> Ctx ()
+commit rsrcs author author_email logmsg extraopts = do
+	let authopts = [ "--author", author ++ " <" ++ author_email ++ ">" ]
+	let msgopts = [ "-m", logmsg ]
+	let opts = authopts ++ msgopts ++ extraopts ++ [ "--" ] ++ rsrcs
+	o <- gitExec "commit" opts []
+	case o of
+		Right _  -> return ()
+		Left err -> vcsError err "commit"
+
+{- | checkout the index to some commit id creating potentially a branch -}
+checkout :: Maybe String -- ^ Commit ID 
+            -> Maybe String -- ^ branchname
+            -> Ctx ()
+checkout rev branch = do
+	let bopt = maybe [] (\b -> [ "-b", b ]) branch
+	let copt = maybeToList rev -- [] (: []) rev
+	_ <- gitExec "checkout" (bopt ++ copt) []
+	return ()
+
+
+---------------------------------
+-- modification Harald Jagenteufel
+---------------------------------
+
+-- | Return the status of given repo.
+status :: Ctx [Status]
+status = do
+    rawStatus <- gitExec "status" ["--porcelain"] []
+    case rawStatus of
+        Left err -> vcsError err "status"
+        Right status -> return $ parseStatus status
+
+
+simpleLog :: Ctx (Maybe [LogEntry])
+simpleLog = do
+    rawLog <- gitExec "log" ["--pretty=tformat:commit:%H%n%an%n%ae%n%ai%n%s%n%b%x00"] []
+    case rawLog of
+        Left err -> vcsError err "log"
+        Right log -> do
+            return $ parseSimpleLog log
+
+
+-- | TODO check if an initialized git repo is at specified path
+-- TODO wrap in MaybeT ?
 --openRepo :: FilePath -- ^ .git
 --     -> String -- ^ author
 --     -> String -- ^ author email
 --     -> IO GitRepo
 --openRepo path author email = do
 --    return $ GitRepo path author email
---
---
---cfg :: FilePath -> VCSWrapper.Git.Types.Config
---cfg path = G.makeConfig path Nothing
