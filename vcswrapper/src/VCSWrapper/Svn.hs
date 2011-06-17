@@ -70,12 +70,12 @@ commit rsrcs author logmsg extraopts = do
     execute "commit" opts
 
 -- create a new repository - TODO complete implementation
-createRepo :: Ctx ()
-createRepo = do
-    o <- svnadminExec "create" [] []
-    case o of
-        Right _ -> return ()
-        Left err -> svnError err "svnadmin create"
+--createRepo :: Ctx ()
+--createRepo = do
+--    o <- svnadminExec "create" [] []
+--    case o of
+--        Right _ -> return ()
+--        Left err -> svnError err "svnadmin create"
 
 -- locks given files
 lock :: [FilePath] -- files to lock, must not be empty
@@ -94,7 +94,7 @@ status _ = do
         o <- svnExec "status" [] []
         case o of
             Right out  -> return $ parseStatusOut out
-            Left err -> return $ svnError err "status"
+            Left err -> return $ vcsError err "status"
 
 -- unlocks given files
 unlock :: [FilePath] -- files to unlock, must not be empty
@@ -161,4 +161,4 @@ execute commandName options = do
         o <- svnExec commandName options []
         case o of
             Right _  -> return ()
-            Left err -> svnError err commandName
+            Left err -> vcsError err commandName

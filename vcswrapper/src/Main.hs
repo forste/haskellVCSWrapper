@@ -35,7 +35,7 @@ main = do
 --    runWithConfig $ commit ["file5"] "hansi" "first haskell commit" []
 
     where
-        runWithConfig = runSvn curConfig
+        runWithConfig = runVcs curConfig
         curConfig = makeConfig (Just cwd) Nothing Nothing
         cwd = "/home/n0s/project1_work3"
         url = "file:///home/n0s/svnrep/project1/trunk"

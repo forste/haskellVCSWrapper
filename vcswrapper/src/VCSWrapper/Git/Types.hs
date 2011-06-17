@@ -16,9 +16,10 @@ module VCSWrapper.Git.Types (
     GitRepo (..)
     , GitStatus (..)
     , GitLog (..)
-    , LogEntry (..)
+    , module VCSWrapper.Common.Types
 ) where
 
+import VCSWrapper.Common.Types
 --import qualified SCM.Interface as IF
 
 
@@ -50,12 +51,5 @@ data GitStatus = GitStatus {
 data GitLog = GitLog [LogEntry]
     deriving (Show)
 
-data LogEntry = LogEntry {
-    commitID :: String
-    , author :: String
-    , email :: String
-    , date :: String
-    , subject :: String
-    , body :: String
-} deriving (Show)
+
 
