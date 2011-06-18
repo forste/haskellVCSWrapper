@@ -9,18 +9,20 @@
 -- Portability :
 --
 -- | This module provide Git functionality exec'ing the git binary.
--- give simple access to commit, tree, tag, blob objects.
+-- give simple access to commit, checkout, status, log.
 -----------------------------------------------------------------------------
 
 module VCSWrapper.Git (
     initDB
---    , cloneRepo
+    --    , cloneRepo
     , status
     , simpleLog
     , commit
     , checkout
-    , Status (..)
-    , LogEntry (..)
+
+    , module VCSWrapper.Git.Process -- TODO only export useful process functions
+
+    , module VCSWrapper.Git.Types
 ) where
 
 import System.Directory
@@ -29,7 +31,7 @@ import Data.List.Utils
 
 import VCSWrapper.Git.Parsers
 import VCSWrapper.Git.Process
-import VCSWrapper.Common.Types
+import VCSWrapper.Git.Types
 
 import Data.Maybe
 import qualified Data.List
@@ -38,57 +40,57 @@ import qualified Data.List
 {- | initialize a new repository database -}
 initDB :: Bool -> Ctx ()
 initDB bare = do
-        let opts = if bare then ["--bare"] else []
-	o <- gitExec "init-db" opts []
-	case o of
-		Right _  -> return ()
-		Left err -> vcsError err "init-db"
+    let opts = if bare then ["--bare"] else []
+    o <- gitExec "init-db" opts []
+    case o of
+        Right _  -> return ()
+        Left err -> vcsError err "init-db"
 
 {- | add filepath to repository -}
 add :: [ FilePath ] -> Ctx ()
 add paths = do
-	let opts = "--" : paths
-	o <- gitExec "add" opts []
-	case o of
-		Right _  -> return ()
-		Left err -> vcsError err "add"
+    let opts = "--" : paths
+    o <- gitExec "add" opts []
+    case o of
+        Right _  -> return ()
+        Left err -> vcsError err "add"
 
 {- | rm filepath from repository -}
 rm :: [ FilePath ] -> Ctx ()
 rm paths = do
-	let opts = "--" : paths
-	o <- gitExec "rm" opts []
-	case o of
-		Right _  -> return ()
-		Left err -> vcsError err "rm"
+    let opts = "--" : paths
+    o <- gitExec "rm" opts []
+    case o of
+        Right _  -> return ()
+        Left err -> vcsError err "rm"
 
 {- | commit change to the repository with optional filepaths -}
 commit :: [ FilePath ] -> String -> String -> String -> [String] -> Ctx ()
 commit rsrcs author author_email logmsg extraopts = do
-	let authopts = [ "--author", author ++ " <" ++ author_email ++ ">" ]
-	let msgopts = [ "-m", logmsg ]
-	let opts = authopts ++ msgopts ++ extraopts ++ [ "--" ] ++ rsrcs
-	o <- gitExec "commit" opts []
-	case o of
-		Right _  -> return ()
-		Left err -> vcsError err "commit"
+    let authopts = [ "--author", author ++ " <" ++ author_email ++ ">" ]
+    let msgopts = [ "-m", logmsg ]
+    let opts = authopts ++ msgopts ++ extraopts ++ [ "--" ] ++ rsrcs
+    o <- gitExec "commit" opts []
+    case o of
+        Right _  -> return ()
+        Left err -> vcsError err "commit"
 
 {- | checkout the index to some commit id creating potentially a branch -}
-checkout :: Maybe String -- ^ Commit ID 
-            -> Maybe String -- ^ branchname
-            -> Ctx ()
+checkout :: Maybe String -- ^ Commit ID
+        -> Maybe String -- ^ branchname
+        -> Ctx ()
 checkout rev branch = do
-	let bopt = maybe [] (\b -> [ "-b", b ]) branch
-	let copt = maybeToList rev -- [] (: []) rev
-	_ <- gitExec "checkout" (bopt ++ copt) []
-	return ()
+    let bopt = maybe [] (\b -> [ "-b", b ]) branch
+    let copt = maybeToList rev -- [] (: []) rev
+    _ <- gitExec "checkout" (bopt ++ copt) []
+    return ()
 
 
 ---------------------------------
 -- modification Harald Jagenteufel
 ---------------------------------
 
--- | Return the status of given repo.
+    -- | Return the status of given repo.
 status :: Ctx [Status]
 status = do
     rawStatus <- gitExec "status" ["--porcelain"] []
@@ -97,7 +99,7 @@ status = do
         Right status -> return $ parseStatus status
 
 
-simpleLog :: Ctx (Maybe [LogEntry])
+simpleLog :: Ctx [LogEntry]
 simpleLog = do
     rawLog <- gitExec "log" ["--pretty=tformat:commit:%H%n%an%n%ae%n%ai%n%s%n%b%x00"] []
     case rawLog of
@@ -106,11 +108,11 @@ simpleLog = do
             return $ parseSimpleLog log
 
 
--- | TODO check if an initialized git repo is at specified path
--- TODO wrap in MaybeT ?
---openRepo :: FilePath -- ^ .git
---     -> String -- ^ author
---     -> String -- ^ author email
---     -> IO GitRepo
---openRepo path author email = do
---    return $ GitRepo path author email
+    -- | TODO check if an initialized git repo is at specified path
+    -- TODO wrap in MaybeT ?
+    --openRepo :: FilePath -- ^ .git
+    --     -> String -- ^ author
+    --     -> String -- ^ author email
+    --     -> IO GitRepo
+    --openRepo path author email = do
+    --    return $ GitRepo path author email

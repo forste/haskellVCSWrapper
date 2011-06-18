@@ -13,7 +13,9 @@
 -----------------------------------------------------------------------------
 
 module VCSWrapper.Git.Types (
+    module VCSWrapper.Common.Types
 ) where
+import VCSWrapper.Common.Types
 
 --import qualified SCM.Interface as IF
 

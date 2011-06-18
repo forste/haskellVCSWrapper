@@ -13,6 +13,13 @@ build-depends: MissingH -any, base -any, directory -any,
                directory -any, haskell98 -any, libgit -any, mtl -any,
                process -any, parsec -any, parsec -any, process -any, mtl -any,
                libgit -any, haskell98 -any, directory -any, base -any,
+               MissingH -any, MissingH -any, base -any, directory -any,
+               haskell98 -any, libgit -any, mtl -any, process -any, parsec -any,
+               parsec -any, process -any, mtl -any, libgit -any, haskell98 -any,
+               directory -any, base -any, MissingH -any, MissingH -any, base -any,
+               directory -any, haskell98 -any, libgit -any, mtl -any,
+               process -any, parsec -any, parsec -any, process -any, mtl -any,
+               libgit -any, haskell98 -any, directory -any, base -any,
                MissingH -any
 stability:
 homepage:
@@ -27,7 +34,7 @@ data-files:
 data-dir: ""
 extra-source-files:
 extra-tmp-files:
-exposed-modules: VCSWrapper.Git VCSWrapper.Svn
+exposed-modules: VCSWrapper.Common VCSWrapper.Git VCSWrapper.Svn
 exposed: True
 buildable: True
 build-tools:
