@@ -6,20 +6,55 @@ license: AllRightsReserved
 license-file: ""
 copyright:
 maintainer:
-build-depends: MissingH -any, base -any, directory -any,
-               haskell98 -any, libgit -any, mtl -any, process -any, parsec -any,
-               parsec -any, process -any, mtl -any, libgit -any, haskell98 -any,
-               directory -any, base -any, MissingH -any, MissingH -any, base -any,
-               directory -any, haskell98 -any, libgit -any, mtl -any,
-               process -any, parsec -any, parsec -any, process -any, mtl -any,
-               libgit -any, haskell98 -any, directory -any, base -any,
-               MissingH -any, MissingH -any, base -any, directory -any,
-               haskell98 -any, libgit -any, mtl -any, process -any, parsec -any,
-               parsec -any, process -any, mtl -any, libgit -any, haskell98 -any,
-               directory -any, base -any, MissingH -any, MissingH -any, base -any,
-               directory -any, haskell98 -any, libgit -any, mtl -any,
-               process -any, parsec -any, parsec -any, process -any, mtl -any,
-               libgit -any, haskell98 -any, directory -any, base -any,
+build-depends: MissingH -any, MissingH -any, MissingH -any,
+               MissingH -any, MissingH -any, MissingH -any, MissingH -any,
+               MissingH -any, MissingH -any, MissingH -any, MissingH -any,
+               MissingH -any, MissingH -any, MissingH -any, MissingH -any,
+               MissingH -any, base -any, base -any, base -any, base -any,
+               base -any, base -any, base -any, base -any, base -any, base -any,
+               base -any, base -any, base -any, base -any, base -any, base -any,
+               haskell98 -any, haskell98 -any, haskell98 -any, haskell98 -any,
+               hxt -any, libgit -any, libgit -any, libgit -any, libgit -any,
+               libgit -any, libgit -any, libgit -any, libgit -any, libgit -any,
+               libgit -any, libgit -any, libgit -any, libgit -any, libgit -any,
+               libgit -any, libgit -any, mtl -any, mtl -any, mtl -any, mtl -any,
+               mtl -any, mtl -any, mtl -any, mtl -any, mtl -any, mtl -any,
+               mtl -any, mtl -any, mtl -any, mtl -any, mtl -any, mtl -any,
+               parsec -any, parsec -any, parsec -any, parsec -any, parsec -any,
+               parsec -any, parsec -any, parsec -any, parsec -any, parsec -any,
+               parsec -any, parsec -any, parsec -any, parsec -any, parsec -any,
+               parsec -any, process -any, process -any, process -any,
+               process -any, process -any, process -any, process -any,
+               process -any, process -any, process -any, process -any,
+               process -any, process -any, process -any, process -any,
+               process -any, process -any, process -any, process -any,
+               process -any, process -any, process -any, process -any,
+               process -any, process -any, process -any, process -any,
+               process -any, process -any, process -any, process -any,
+               process -any, parsec -any, parsec -any, parsec -any, parsec -any,
+               parsec -any, parsec -any, parsec -any, parsec -any, parsec -any,
+               parsec -any, parsec -any, parsec -any, parsec -any, parsec -any,
+               parsec -any, parsec -any, mtl -any, mtl -any, mtl -any, mtl -any,
+               mtl -any, mtl -any, mtl -any, mtl -any, mtl -any, mtl -any,
+               mtl -any, mtl -any, mtl -any, mtl -any, mtl -any, mtl -any,
+               libgit -any, libgit -any, libgit -any, libgit -any, libgit -any,
+               libgit -any, libgit -any, libgit -any, libgit -any, libgit -any,
+               libgit -any, libgit -any, libgit -any, libgit -any, libgit -any,
+               libgit -any, hxt -any, haskell98 -any, haskell98 -any,
+               haskell98 -any, haskell98 -any, haskell98 -any, haskell98 -any,
+               haskell98 -any, haskell98 -any, haskell98 -any, haskell98 -any,
+               haskell98 -any, haskell98 -any, haskell98 -any, haskell98 -any,
+               haskell98 -any, haskell98 -any, directory -any, directory -any,
+               directory -any, directory -any, directory -any, directory -any,
+               directory -any, directory -any, directory -any, directory -any,
+               directory -any, directory -any, directory -any, directory -any,
+               directory -any, directory -any, base -any, base -any, base -any,
+               base -any, base -any, base -any, base -any, base -any, base -any,
+               base -any, base -any, base -any, base -any, base -any, base -any,
+               base -any, MissingH -any, MissingH -any, MissingH -any,
+               MissingH -any, MissingH -any, MissingH -any, MissingH -any,
+               MissingH -any, MissingH -any, MissingH -any, MissingH -any,
+               MissingH -any, MissingH -any, MissingH -any, MissingH -any,
                MissingH -any
 stability:
 homepage:
@@ -55,9 +90,10 @@ includes:
 install-includes:
 include-dirs:
 hs-source-dirs: src
-other-modules: VCSWrapper.Common.Process VCSWrapper.Git.Types
-               VCSWrapper VCSWrapper.Svn.Types VCSWrapper.Svn.Process
-               VCSWrapper.Common.Types VCSWrapper.Git.Parsers
+other-modules: VCSWrapper.Common.TemporaryFiles VCSWrapper
+               VCSWrapper.Svn.Types VCSWrapper.Svn.Process VCSWrapper.Svn.Parsers
+               VCSWrapper.Git.Types VCSWrapper.Git.Parsers VCSWrapper.Common.Types
+               VCSWrapper.Common.Process
 ghc-prof-options:
 ghc-shared-options:
 ghc-options:
@@ -86,9 +122,10 @@ includes:
 install-includes:
 include-dirs:
 hs-source-dirs: src
-other-modules: VCSWrapper.Common.Process VCSWrapper.Git.Types
-               VCSWrapper VCSWrapper.Svn.Types VCSWrapper.Svn.Process
-               VCSWrapper.Common.Types VCSWrapper.Git.Parsers
+other-modules: VCSWrapper.Common.TemporaryFiles VCSWrapper
+               VCSWrapper.Svn.Types VCSWrapper.Svn.Process VCSWrapper.Svn.Parsers
+               VCSWrapper.Git.Types VCSWrapper.Git.Parsers VCSWrapper.Common.Types
+               VCSWrapper.Common.Process
 ghc-prof-options:
 ghc-shared-options:
 ghc-options:
