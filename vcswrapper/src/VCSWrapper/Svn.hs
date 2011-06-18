@@ -29,12 +29,13 @@ module VCSWrapper.Svn (
     ,module VCSWrapper.Svn.Types
 ) where
 
-
+import VCSWrapper.Svn.Parsers
+import VCSWrapper.Common.TemporaryFiles
 import VCSWrapper.Svn.Process
 import VCSWrapper.Svn.Types
 import Maybe
 import Data.List.Utils
-
+import System.IO
 --
 --  SVN COMMANDS
 --
@@ -90,12 +91,29 @@ lock files comment = do
     where
         opts = if comment==[] then [] else [ "--message", comment]
 
+--log :: Ctx [LogEntry]
+--log = do
+--      o <- svnExec "log" [] []
+--      case o of
+--            Right out  -> do
+--                        logEntries <- withTempFile "log.xml" parseLog
+--                        return logEntries
+--            Left err -> return $ vcsError err "log"
+
+
+parseLog :: FilePath -> Handle -> IO [LogEntry]
+parseLog path handle = do
+                    writeToHandle out handle
+                    parseDocument path
+    where
+        out = "test"
+
 {- | Get status information which will be a list of (filepath, modification-status, isLocked).
    Options will be ignored. -}
 status :: [String] -- ^ Options, will be ignored
          -> Ctx [Status]
 status _ = do
-        o <- svnExec "status" [] []
+        o <- svnExec "status" ["--xml"] []
         case o of
             Right out  -> return $ parseStatusOut out
             Left err -> return $ vcsError err "status"
