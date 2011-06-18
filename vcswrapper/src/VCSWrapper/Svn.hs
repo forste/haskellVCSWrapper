@@ -18,6 +18,7 @@ module VCSWrapper.Svn (
     ,checkout
     ,commit
     ,lock
+    ,simpleLog
     ,unlock
     ,update
     ,status
@@ -33,6 +34,7 @@ import VCSWrapper.Svn.Parsers
 import VCSWrapper.Common.TemporaryFiles
 import VCSWrapper.Svn.Process
 import VCSWrapper.Svn.Types
+import Control.Monad.Reader
 import Maybe
 import Data.List.Utils
 import System.IO
@@ -91,22 +93,22 @@ lock files comment = do
     where
         opts = if comment==[] then [] else [ "--message", comment]
 
---log :: Ctx [LogEntry]
---log = do
---      o <- svnExec "log" [] []
---      case o of
---            Right out  -> do
---                        logEntries <- withTempFile "log.xml" parseLog
---                        return logEntries
---            Left err -> return $ vcsError err "log"
+simpleLog :: Ctx [LogEntry]
+simpleLog = do
+      o <- svnExec "log" ["--xml"] []
+      case o of
+            Right out  -> do
+                        logEntries <- liftIO $ withTempFile "log.xml" (parseLog out)
+                        return logEntries
+            Left err -> return $ vcsError err "log"
 
 
-parseLog :: FilePath -> Handle -> IO [LogEntry]
-parseLog path handle = do
+parseLog :: String -> FilePath -> Handle -> IO [LogEntry]
+parseLog out path handle = do
+                    putStrLn $ "Writing output to handle: "++show handle
                     writeToHandle out handle
+                    putStrLn $ "Attempting to parse path: "++path
                     parseDocument path
-    where
-        out = "test"
 
 {- | Get status information which will be a list of (filepath, modification-status, isLocked).
    Options will be ignored. -}

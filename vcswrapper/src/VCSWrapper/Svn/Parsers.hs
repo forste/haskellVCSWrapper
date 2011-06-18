@@ -13,7 +13,7 @@
 -----------------------------------------------------------------------------
 
 module VCSWrapper.Svn.Parsers (
-    parseDocument
+   parseDocument
 ) where
 import Data.Maybe
 import System.Exit
@@ -66,7 +66,8 @@ parseDocument :: FilePath -> IO [Common.LogEntry]
 parseDocument document =
             do
 --            runX (xpickleDocument xpLog [ withRemoveWS yes, withValidate no] (document++"v2"))
-            [log] <- runX (xunpickleDocument xpLog [ withRemoveWS yes, withValidate no] document)
+            logs <- runX (xunpickleDocument xpLog [ withRemoveWS yes, withValidate no] document)
+            let log = logs!!0
             let entries = map (\(LogEntry rev aut dat msg) -> Common.LogEntry (show rev) aut "" dat msg msg)
                               (logEntries log)
             return entries

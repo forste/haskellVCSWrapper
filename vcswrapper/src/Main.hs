@@ -13,14 +13,20 @@
 -----------------------------------------------------------------------------
 
 module Main (
-    main
+    main,
+    VCSWrapper.Svn.simpleLog
 ) where
 
 import VCSWrapper.Svn
-import VCSWrapper.Svn.Parsers
 
 main = do
-      parseDocument "out.xml"
+--      parseDocument "out.xml"
+      runWithConfig $ simpleLog
+      where
+        runWithConfig = runVcs curConfig
+        curConfig = makeConfig (Just cwd) Nothing Nothing
+        cwd = "/home/n0s/project1_work3"
+        url = "file:///home/n0s/svnrep/project1/trunk"
 --    putStrLn "Starting!"
 ----    runWithConfig $ checkout (Just "hans") [(url, Nothing)] (Just targetDirectory) []
 ----    runWithConfig $ add ["file10"] []
@@ -36,8 +42,4 @@ main = do
 ----    runWithConfig $ add ["file5"]
 ----    runWithConfig $ commit ["file5"] "hansi" "first haskell commit" []
 
---    where
---        runWithConfig = runVcs curConfig
---        curConfig = makeConfig (Just cwd) Nothing Nothing
---        cwd = "/home/n0s/project1_work3"
---        url = "file:///home/n0s/svnrep/project1/trunk"
+
