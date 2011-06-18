@@ -45,14 +45,7 @@ build-depends: MissingH -any, MissingH -any, MissingH -any,
                directory -any, directory -any, directory -any, directory -any,
                directory -any, directory -any, directory -any, directory -any,
                directory -any, directory -any, directory -any, directory -any,
-               directory -any, directory -any, directory -any, directory -any,
-               directory -any, directory -any, directory -any, directory -any,
-               directory -any, directory -any, directory -any, directory -any,
-               directory -any, directory -any, directory -any, directory -any,
                haddock -any, haskell98 -any, haskell98 -any, haskell98 -any,
-               haskell98 -any, haskell98 -any, haskell98 -any, haskell98 -any,
-               haskell98 -any, haskell98 -any, haskell98 -any, haskell98 -any,
-               haskell98 -any, haskell98 -any, haskell98 -any, haskell98 -any,
                haskell98 -any, haskell98 -any, haskell98 -any, haskell98 -any,
                haskell98 -any, haskell98 -any, haskell98 -any, haskell98 -any,
                haskell98 -any, haskell98 -any, haskell98 -any, haskell98 -any,
@@ -132,7 +125,7 @@ data-files:
 data-dir: ""
 extra-source-files:
 extra-tmp-files:
-exposed-modules: VCSWrapper.Git VCSWrapper.Svn
+exposed-modules: VCSWrapper.Common VCSWrapper.Git VCSWrapper.Svn
 exposed: True
 buildable: True
 build-tools:

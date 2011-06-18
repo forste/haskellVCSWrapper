@@ -32,11 +32,11 @@ parseStatus status = [ GITStatus xs Modified | (_:x:_:xs) <- lines, x == 'M'] --
         where
         lines = split "\n" status
 
-parseSimpleLog :: String -> Maybe [LogEntry]
+parseSimpleLog :: String -> [LogEntry]
 parseSimpleLog log =
     case parsed of
-        Right entries -> Just $ entries
-        Left _ -> Nothing
+        Right entries -> entries
+        Left _ -> []
     where parsed = parse logEntries "" log
 
 -- git log --pretty=tformat:"commit:%H%n%an%n%ae%n%ai%n%s%n%b%x00"
