@@ -17,12 +17,21 @@ module VCSWrapper.Svn.Parsers (
 ) where
 import Data.Maybe
 import System.Exit
-
 import Text.XML.HXT.Core
 import qualified VCSWrapper.Common.Types as Common
 
 instance XmlPickler Log where
     xpickle = xpLog
+
+
+parseDocument :: FilePath -> IO [Common.LogEntry]
+parseDocument document =
+            do
+            logs <- runX (xunpickleDocument xpLog [ withRemoveWS yes, withValidate no] document)
+            let log = head logs
+            let entries = map (\(LogEntry rev aut dat msg) -> Common.LogEntry (show rev) aut "" dat msg msg)
+                              (logEntries log)
+            return entries
 
 data Log = Log {
     logEntries :: LogEntries
@@ -62,24 +71,5 @@ xpLogEntry =  xpWrap (\(rev,aut,dat,msg) -> LogEntry { revision = rev, author = 
             where
                 xpElemWithText elem = xpElem elem $ xpText0
 
-parseDocument :: FilePath -> IO [Common.LogEntry]
-parseDocument document =
-            do
---            runX (xpickleDocument xpLog [ withRemoveWS yes, withValidate no] (document++"v2"))
-            logs <- runX (xunpickleDocument xpLog [ withRemoveWS yes, withValidate no] document)
-            let log = logs!!0
-            let entries = map (\(LogEntry rev aut dat msg) -> Common.LogEntry (show rev) aut "" dat msg msg)
-                              (logEntries log)
-            return entries
---            let v = version $ log!!0
---            putStrLn $ "Version first:"++show v
---            putStrLn $ "Full log: "++show entries
 
---data LogEntry = LogEntry {
---    commitID :: String
---    , author :: String
---    , email :: String
---    , date :: String
---    , subject :: String
---    , body :: String
---} deriving (Show)
+
