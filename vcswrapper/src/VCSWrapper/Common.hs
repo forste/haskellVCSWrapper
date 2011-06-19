@@ -14,7 +14,9 @@
 
 module VCSWrapper.Common (
     module VCSWrapper.Common.Types
+    ,module VCSWrapper.Common.Process
 ) where
 import VCSWrapper.Common.Types
+import VCSWrapper.Common.Process
 
 

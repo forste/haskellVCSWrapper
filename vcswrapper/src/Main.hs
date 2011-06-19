@@ -23,6 +23,11 @@ main = do
 --      parseDocument "out.xml"
       logEntries <- runWithConfig $ simpleLog
       putStrLn $ "LogEntries :"++show logEntries
+      stats <- runWithConfig $ status []
+      putStrLn $ "Status :"++show stats
+      runWithConfig $ commit [] "hansi" "commit" []
+      stats <- runWithConfig $ status []
+      putStrLn $ "Status :"++show stats
       where
         runWithConfig = runVcs curConfig
         curConfig = makeConfig (Just cwd) Nothing Nothing

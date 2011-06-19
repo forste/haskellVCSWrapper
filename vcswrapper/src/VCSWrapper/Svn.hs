@@ -113,7 +113,7 @@ simpleLog = do
 status :: [String] -- ^ Options, will be ignored
          -> Ctx [Status]
 status _ = do
-        o <- svnExec "status" ["--xml"] []
+        o <- svnExec "status" [] []
         case o of
             Right out  -> return $ parseStatusOut out
             Left err -> return $ vcsError err "status"
@@ -170,11 +170,13 @@ parseFirstCol 'D' = Deleted
 parseFirstCol 'M' = Modified
 parseFirstCol 'R' = Replaced
 parseFirstCol '?' = Untracked
-parseFirstCol _   = Unknown
+parseFirstCol '!' = Missing
+parseFirstCol _  = Unknown
 
 parseSixthCol :: Char -> IsLocked
 parseSixthCol 'K' = True
-parseSixthCol ' ' = False
+parseSixthCol _ = False
+
 
 
 
