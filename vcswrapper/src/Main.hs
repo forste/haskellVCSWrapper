@@ -21,7 +21,8 @@ import VCSWrapper.Svn
 
 main = do
 --      parseDocument "out.xml"
-      runWithConfig $ simpleLog
+      logEntries <- runWithConfig $ simpleLog
+      putStrLn $ "LogEntries :"++show logEntries
       where
         runWithConfig = runVcs curConfig
         curConfig = makeConfig (Just cwd) Nothing Nothing

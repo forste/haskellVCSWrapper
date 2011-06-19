@@ -93,22 +93,28 @@ lock files comment = do
     where
         opts = if comment==[] then [] else [ "--message", comment]
 
+{- | -}
 simpleLog :: Ctx [LogEntry]
 simpleLog = do
       o <- svnExec "log" ["--xml"] []
       case o of
             Right out  -> do
-                        logEntries <- liftIO $ withTempFile "log.xml" (parseLog out)
+                        handle <- liftIO $ withTempFile "log.xml" (parseLog out)
+                        logEntries <- liftIO $ parseDocument handle
                         return logEntries
             Left err -> return $ vcsError err "log"
 
 
-parseLog :: String -> FilePath -> Handle -> IO [LogEntry]
-parseLog out path handle = do
-                    putStrLn $ "Writing output to handle: "++show handle
-                    writeToHandle out handle
-                    putStrLn $ "Attempting to parse path: "++path
-                    parseDocument path
+parseLog :: String -> FilePath -> Handle -> IO FilePath
+parseLog out path tHandle = do
+                    putStrLn $ "Writing output to handle: "++show tHandle
+                    writeToHandle out tHandle
+                    putStrLn $ "Filepath of handle is "++filePath
+                    return $ filePath
+        where
+            filePath = init $ nFunc tail 9 (show tHandle)
+--                    putStrLn $ "Attempting to parse path: "++path
+--                    parseDocument path
 
 {- | Get status information which will be a list of (filepath, modification-status, isLocked).
    Options will be ignored. -}
