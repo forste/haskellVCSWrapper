@@ -19,6 +19,7 @@ module VCSWrapper.Git (
     , simpleLog
     , commit
     , checkout
+    , localBranches
 
     , module VCSWrapper.Git.Process -- TODO only export useful process functions
 
@@ -98,14 +99,28 @@ status = do
         Left err -> vcsError err "status"
         Right status -> return $ parseStatus status
 
+-- | get the log, maybe from a specific branch (defaults to the current branch)
+simpleLog :: Maybe String -> Ctx [LogEntry]
+simpleLog mbBranch = do
+        rawLog <- gitExec "log" ((branch mbBranch) ++ ["--pretty=tformat:commit:%H%n%an%n%ae%n%ai%n%s%n%b%x00"]) []
+        case rawLog of
+            Left err -> vcsError err "log"
+            Right log -> do
+                return $ parseSimpleLog log
+    where
+    branch Nothing = []
+    branch (Just b) = [b]
 
-simpleLog :: Ctx [LogEntry]
-simpleLog = do
-    rawLog <- gitExec "log" ["--pretty=tformat:commit:%H%n%an%n%ae%n%ai%n%s%n%b%x00"] []
-    case rawLog of
-        Left err -> vcsError err "log"
-        Right log -> do
-            return $ parseSimpleLog log
+
+-- | get all local branches.
+localBranches :: Ctx (String, -- ^ currently checked out branch
+     [String]) -- ^ all other branches
+localBranches = do
+    rawBranches <- gitExec "branch" [] []
+    case rawBranches of
+        Left err -> vcsError err "branch"
+        Right branches -> do
+            return $ parseBranches branches
 
 
     -- | TODO check if an initialized git repo is at specified path

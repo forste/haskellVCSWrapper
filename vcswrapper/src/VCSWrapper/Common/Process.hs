@@ -69,7 +69,7 @@ vcsError err msg =
 vcsErrorToString :: VCSFailure -> String -> String
 vcsErrorToString (exitval, stdout, stderr, mcwd, cmd) msg =
     concat [ "vcs error ", "[cwd: ", mcwd,
-        "][exec: ", concat cmd, "][exit: ", show exitval, "][msg: ", msg, "] ",
+        "][exec: ", unwords cmd, "][exit: ", show exitval, "][msg: ", msg, "] ",
         "stdout: ", stdout, " stderr: ", stderr ]
 
 -- just exec with stdin/stdout/stderr as pipes

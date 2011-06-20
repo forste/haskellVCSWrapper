@@ -14,6 +14,7 @@
 
 module VCSWrapper.Git.Parsers (
     parseStatus
+    , parseBranches
     , parseSimpleLog
 ) where
 
@@ -25,12 +26,18 @@ import VCSWrapper.Common.Types
 
 
 parseStatus :: String -> [Status]
-parseStatus status = [ GITStatus xs Modified | (_:x:_:xs) <- lines, x == 'M'] -- M only displayed in second column
-        ++ [ GITStatus xs Untracked | (x:_:_:xs) <- lines, x == '?']
-        ++ [ GITStatus xs Added | (x:_:_:xs) <- lines, x == 'A'] -- A only displayed in second column
-        ++ [ GITStatus xs Deleted | (x:y:_:xs) <- lines, x == 'D' || y == 'D'] -- D flag depends on index state (both columns)
+parseStatus status = [ GITStatus filepath Modified | (_:x:_:filepath) <- lines, x == 'M'] -- M only displayed in second column
+        ++ [ GITStatus filepath Untracked | (x:_:_:filepath) <- lines, x == '?']
+        ++ [ GITStatus filepath Added | (x:_:_:filepath) <- lines, x == 'A'] -- A only displayed in second column
+        ++ [ GITStatus filepath Deleted | (x:y:_:filepath) <- lines, x == 'D' || y == 'D'] -- D flag depends on index state (both columns)
         where
         lines = split "\n" status
+
+parseBranches :: String -> (String, [String])
+parseBranches string = (head [branchname | ('*':_:branchname) <- lines],
+    [branchname | (' ':' ':branchname) <- lines])
+    where
+    lines = split "\n" string
 
 parseSimpleLog :: String -> [LogEntry]
 parseSimpleLog log =
