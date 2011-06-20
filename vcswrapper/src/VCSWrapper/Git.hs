@@ -14,13 +14,15 @@
 
 module VCSWrapper.Git (
     initDB
-    --    , cloneRepo
-    , status
-    , simpleLog
+    , add
+    , rm
     , commit
     , checkout
+    , status
+    , simpleLog
     , localBranches
     , revparse
+    --    , clone
 
     , module VCSWrapper.Git.Process -- TODO only export useful process functions
 
@@ -67,16 +69,22 @@ rm paths = do
         Right _  -> return ()
         Left err -> vcsError err "rm"
 
-{- | commit change to the repository with optional filepaths -}
-commit :: [ FilePath ] -> String -> String -> String -> [String] -> Ctx ()
-commit rsrcs author author_email logmsg extraopts = do
-    let authopts = [ "--author", author ++ " <" ++ author_email ++ ">" ]
-    let msgopts = [ "-m", logmsg ]
-    let opts = authopts ++ msgopts ++ extraopts ++ [ "--" ] ++ rsrcs
-    o <- gitExec "commit" opts []
-    case o of
-        Right _  -> return ()
-        Left err -> vcsError err "commit"
+{- | commit change to the repository with optional filepaths and optional author + email -}
+commit :: [ FilePath ] -> Maybe (String, String) -> String -> [String] -> Ctx ()
+commit rsrcs mbAuthor logmsg extraopts = do
+        case mbAuthor of
+            Just (author, author_email) ->
+                commit' rsrcs logmsg extraopts ["--author", author ++ " <" ++ author_email ++ ">"]
+            Nothing ->
+                commit' rsrcs logmsg extraopts []
+    where
+    commit' files logmsg extraopts authopts = do
+        let msgopts = [ "-m", logmsg ]
+        let opts = authopts ++ msgopts ++ extraopts ++ [ "--" ] ++ files
+        o <- gitExec "commit" opts []
+        case o of
+            Right _  -> return ()
+            Left err -> vcsError err "commit"
 
 {- | checkout the index to some commit id creating potentially a branch -}
 checkout :: Maybe String -- ^ Commit ID
