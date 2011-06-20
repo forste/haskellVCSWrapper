@@ -18,6 +18,7 @@ module VCSWrapper.Svn (
     ,checkout
     ,commit
     ,lock
+    ,revert
     ,simpleLog
     ,unlock
     ,update
@@ -91,6 +92,11 @@ lock files comment = do
         execute "lock" $ files++opts
     where
         opts = if comment==[] then [] else [ "--message", comment]
+
+{- | Revert to specific revision in current working directory -}
+revert :: Integer  -- ^ revision, e.g. 3
+        -> Ctx()
+revert revision = execute "merge" ["-rHEAD:"++show revision,"."]
 
 {- | Get log information -}
 simpleLog :: Ctx [LogEntry]
