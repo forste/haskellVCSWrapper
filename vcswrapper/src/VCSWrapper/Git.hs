@@ -20,6 +20,7 @@ module VCSWrapper.Git (
     , commit
     , checkout
     , localBranches
+    , revparse
 
     , module VCSWrapper.Git.Process -- TODO only export useful process functions
 
@@ -36,6 +37,7 @@ import VCSWrapper.Git.Types
 
 import Data.Maybe
 import qualified Data.List
+import Data.String.Utils (strip)
 
 
 {- | initialize a new repository database -}
@@ -122,6 +124,13 @@ localBranches = do
         Right branches -> do
             return $ parseBranches branches
 
+
+revparse :: String -> Ctx (String)
+revparse commit = do
+    o <- gitExec "rev-parse" [commit] []
+    case o of
+        Left err -> vcsError err "rev-parse"
+        Right out -> return $ strip out
 
     -- | TODO check if an initialized git repo is at specified path
     -- TODO wrap in MaybeT ?
