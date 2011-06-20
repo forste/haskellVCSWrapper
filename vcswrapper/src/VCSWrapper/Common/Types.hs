@@ -17,6 +17,7 @@ module VCSWrapper.Common.Types (
     ,LogEntry (..)
     ,Ctx(..)
     ,Config(..)
+    ,Author(..)
     ,VCSFailure
     ,Status(..)
     ,Modification(..)

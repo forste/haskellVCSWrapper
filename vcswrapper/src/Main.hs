@@ -25,7 +25,7 @@ main = do
       putStrLn $ "LogEntries :"++show logEntries
       stats <- runWithConfig $ status []
       putStrLn $ "Status :"++show stats
-      runWithConfig $ commit [] "hansi" "commit" []
+      runWithConfig $ commit [] "commit" []
       stats <- runWithConfig $ status []
       putStrLn $ "Status :"++show stats
       where

@@ -66,15 +66,19 @@ checkout repos path options = do
 {- Commit changes to the repository -}
 commit :: [FilePath]  -- ^ files to commit, may be empty if not empty only specified files will be
                       -- ^ commited
-         -> String      -- ^ author, must not be empty
          -> String      -- ^ message, must not be empty
          -> [String]    -- ^ options, may be empty
          -> Ctx ()
-commit rsrcs author logmsg extraopts = do
-    let authopts = [ "--username", author]
+commit rsrcs logmsg extraopts = do
+    config <- ask
+    let mbAuthor = configAuthor config
+--    let authopts = [ "--username", author]
     let msgopts = [ "--message", logmsg ]
-    let opts = authopts ++ msgopts ++ extraopts ++ rsrcs
+    let opts = (authopts mbAuthor) ++ msgopts ++ extraopts ++ rsrcs
     execute "commit" opts
+    where
+        authopts Nothing = [""]
+        authopts (Just author) =  ["--username"++(authorName author)]
 
 -- create a new repository - TODO complete implementation
 --createRepo :: Ctx ()
