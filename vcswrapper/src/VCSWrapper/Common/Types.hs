@@ -76,12 +76,12 @@ data Config = Config
     { configCwd :: Maybe FilePath
     , configPath :: Maybe FilePath
     , configAuthor :: Maybe Author
-    } deriving (Show)
+    } deriving (Show, Read)
 
 data Author = Author
     { authorName :: String
     , authorEmail :: Maybe String
-    } deriving (Show)
+    } deriving (Show, Read)
 
 newtype Ctx a = Ctx (ReaderT Config IO a)
     deriving (Monad, MonadIO, MonadReader Config)
