@@ -49,12 +49,11 @@ add :: [FilePath] -- files to add
 add files options= execute "add" $ files++options
 
 {- Checkout the index to some commit id creating potentially a branch -}
-checkout ::  Maybe String               -- ^ username
-         -> [(String, Maybe String)]    -- ^ list of (url, revision), must not be empty - revision must not be set
+checkout :: [(String, Maybe String)]    -- ^ list of (url, revision), must not be empty - revision must not be set
          -> Maybe String                -- ^ path
          -> [String]                    -- ^ options
          -> Ctx ()
-checkout username repos path options = do
+checkout repos path options = do
 --    let name = "--username " ++ fromMaybe "anonymous" username ++ " " TODO comment in
     let urls = map  (\(x,y) -> x
                     ++ (if (isNothing y) then "" else "@")
