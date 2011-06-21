@@ -25,14 +25,14 @@ main = do
       putStrLn $ "LogEntries :"++show logEntries
       stats <- runWithConfig $ status []
       putStrLn $ "Status :"++show stats
-      runWithConfig $ commit [] "commit" []
+      runWithConfig $ commit ["file1"] "Enter commit message here." []
       stats <- runWithConfig $ status []
       putStrLn $ "Status :"++show stats
       where
         runWithConfig = runVcs curConfig
         curConfig = makeConfig (Just cwd) Nothing Nothing
-        cwd = "/home/n0s/project1_work3"
-        url = "file:///home/n0s/svnrep/project1/trunk"
+        cwd = "/home/n0s/project1_work4"
+--        url = "file:///home/n0s/svnrep/project1/trunk"
 --    putStrLn "Starting!"
 ----    runWithConfig $ checkout (Just "hans") [(url, Nothing)] (Just targetDirectory) []
 ----    runWithConfig $ add ["file10"] []

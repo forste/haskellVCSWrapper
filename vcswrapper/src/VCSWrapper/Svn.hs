@@ -78,7 +78,7 @@ commit rsrcs logmsg extraopts = do
     execute "commit" opts
     where
         authopts Nothing = [""]
-        authopts (Just author) =  ["--username"++(authorName author)]
+        authopts (Just author) =  [""] -- TODO use author here ["--username"++" "++(authorName author)]
 
 -- create a new repository - TODO complete implementation
 --createRepo :: Ctx ()
