@@ -112,7 +112,7 @@ status = do
 -- | get the log, maybe from a specific branch (defaults to the current branch)
 simpleLog :: Maybe String -> Ctx [LogEntry]
 simpleLog mbBranch = do
-        rawLog <- gitExec "log" ((branch mbBranch) ++ ["--pretty=tformat:commit:%H%n%an%n%ae%n%ai%n%s%n%b%x00"]) []
+        rawLog <- gitExec "log" ((branch mbBranch) ++ ["--pretty=tformat:commit:%H%n%an%n%ae%n%ai%n%s%n%b%x00", "--"]) [] -- double dash on end prevent crash if branch and filename are equal
         case rawLog of
             Left err -> vcsError err "log"
             Right log -> do
