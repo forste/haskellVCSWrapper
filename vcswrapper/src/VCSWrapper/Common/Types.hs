@@ -13,7 +13,8 @@
 -----------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving #-}
 module VCSWrapper.Common.Types (
-    IsLocked
+    VCSType(..)
+    ,IsLocked
     ,LogEntry (..)
     ,Ctx(..)
     ,Config(..)
@@ -29,14 +30,9 @@ module VCSWrapper.Common.Types (
 
 import Control.Monad.Reader
 
+data VCSType = SVN | GIT
+
 data Status = SVNStatus FilePath Modification IsLocked | GITStatus FilePath Modification
---    { file :: FilePath
---    , modification :: Modification
---    , isLocked :: IsLocked
---    } | GITStatus {
---      file :: FilePath
---    , modification :: Modification
---    }
     deriving (Show,Read)
 
 filePath :: Status -> FilePath
@@ -49,6 +45,7 @@ modification (GITStatus _ m) = m
 
 isLocked :: Status -> IsLocked
 isLocked (SVNStatus _ _ l) = l
+isLocked _ = False
 
 data Modification = None |
                     Added |
