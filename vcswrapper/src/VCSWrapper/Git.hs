@@ -22,6 +22,9 @@ module VCSWrapper.Git (
     , simpleLog
     , localBranches
     , revparse
+    , remote
+    , pull
+    , push
     --    , clone
 
     , module VCSWrapper.Git.Process -- TODO only export useful process functions
@@ -46,28 +49,19 @@ import Data.String.Utils (strip)
 initDB :: Bool -> Ctx ()
 initDB bare = do
     let opts = if bare then ["--bare"] else []
-    o <- gitExec "init-db" opts []
-    case o of
-        Right _  -> return ()
-        Left err -> vcsError err "init-db"
+    gitExecWithoutResult "init-db" opts []
 
 {- | add filepath to repository -}
 add :: [ FilePath ] -> Ctx ()
 add paths = do
     let opts = "--" : paths
-    o <- gitExec "add" opts []
-    case o of
-        Right _  -> return ()
-        Left err -> vcsError err "add"
+    gitExecWithoutResult "add" opts []
 
 {- | rm filepath from repository -}
 rm :: [ FilePath ] -> Ctx ()
 rm paths = do
     let opts = "--" : paths
-    o <- gitExec "rm" opts []
-    case o of
-        Right _  -> return ()
-        Left err -> vcsError err "rm"
+    gitExecWithoutResult "rm" opts []
 
 {- | commit change to the repository with optional filepaths and optional author + email -}
 commit :: [ FilePath ] -> Maybe (String, String) -> String -> [String] -> Ctx ()
@@ -81,10 +75,7 @@ commit rsrcs mbAuthor logmsg extraopts = do
     commit' files logmsg extraopts authopts = do
         let msgopts = [ "-m", logmsg ]
         let opts = authopts ++ msgopts ++ extraopts ++ [ "--" ] ++ files
-        o <- gitExec "commit" opts []
-        case o of
-            Right _  -> return ()
-            Left err -> vcsError err "commit"
+        gitExecWithoutResult "commit" opts []
 
 {- | checkout the index to some commit id creating potentially a branch -}
 checkout :: Maybe String -- ^ Commit ID
@@ -93,8 +84,7 @@ checkout :: Maybe String -- ^ Commit ID
 checkout rev branch = do
     let bopt = maybe [] (\b -> [ "-b", b ]) branch
     let copt = maybeToList rev -- [] (: []) rev
-    _ <- gitExec "checkout" (bopt ++ copt) []
-    return ()
+    gitExecWithoutResult "checkout" (bopt ++ copt) []
 
 
 ---------------------------------
@@ -132,7 +122,23 @@ localBranches = do
         Right branches -> do
             return $ parseBranches branches
 
+-- | get all remotes
+remote :: Ctx [String]
+remote = do
+    rawRemotes <- gitExec "remote" [] []
+    case rawRemotes of
+        Left err -> vcsError err "remote"
+        Right remotes -> return $ parseRemotes remotes
 
+-- | push changes to another repository
+push :: Ctx ()
+push = gitExecWithoutResult "push" [] []
+
+-- | pull changes from a remote
+pull :: Ctx ()
+pull = gitExecWithoutResult "pull" [] []
+
+-- | call git rev-parse on a given commit
 revparse :: String -> Ctx (String)
 revparse commit = do
     o <- gitExec "rev-parse" [commit] []
@@ -140,11 +146,8 @@ revparse commit = do
         Left err -> vcsError err "rev-parse"
         Right out -> return $ strip out
 
-    -- | TODO check if an initialized git repo is at specified path
-    -- TODO wrap in MaybeT ?
-    --openRepo :: FilePath -- ^ .git
-    --     -> String -- ^ author
-    --     -> String -- ^ author email
-    --     -> IO GitRepo
-    --openRepo path author email = do
-    --    return $ GitRepo path author email
+
+
+
+
+

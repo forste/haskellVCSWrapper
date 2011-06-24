@@ -15,6 +15,7 @@
 module VCSWrapper.Git.Parsers (
     parseStatus
     , parseBranches
+    , parseRemotes
     , parseSimpleLog
 ) where
 
@@ -38,6 +39,10 @@ parseBranches string = (head [branchname | ('*':_:branchname) <- lines],
     [branchname | (' ':' ':branchname) <- lines])
     where
     lines = split "\n" string
+
+parseRemotes :: String -> [String]
+parseRemotes = split "\n"
+
 
 parseSimpleLog :: String -> [LogEntry]
 parseSimpleLog log =
