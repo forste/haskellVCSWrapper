@@ -130,9 +130,11 @@ remote = do
         Left err -> vcsError err "remote"
         Right remotes -> return $ parseRemotes remotes
 
--- | push changes to another repository
+-- | push current branch to origin
 push :: Ctx ()
-push = gitExecWithoutResult "push" [] []
+push = do
+    (curBranch, _) <- localBranches
+    gitExecWithoutResult "push" ["origin", curBranch] []
 
 -- | pull changes from a remote
 pull :: Ctx ()
