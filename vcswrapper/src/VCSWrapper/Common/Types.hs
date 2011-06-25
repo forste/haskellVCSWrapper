@@ -31,7 +31,7 @@ module VCSWrapper.Common.Types (
 import Control.Monad.Reader
 
 data VCSType = SVN | GIT
-    deriving (Show,Read)
+    deriving (Show,Read, Eq)
 
 data Status = SVNStatus FilePath Modification IsLocked | GITStatus FilePath Modification
     deriving (Show,Read)
