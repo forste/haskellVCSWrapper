@@ -23,6 +23,7 @@ module VCSWrapper.Common.Types (
     ,Status(..)
     ,Modification(..)
     ,makeConfig
+    ,makeConfigWithEnvironment
     ,filePath
     ,modification
     ,isLocked
@@ -76,6 +77,7 @@ data Config = Config
     { configCwd :: Maybe FilePath
     , configPath :: Maybe FilePath
     , configAuthor :: Maybe Author
+    , configEnvironment :: [(String, String)]
     } deriving (Show, Read)
 
 data Author = Author
@@ -86,12 +88,22 @@ data Author = Author
 newtype Ctx a = Ctx (ReaderT Config IO a)
     deriving (Monad, MonadIO, MonadReader Config)
 
+makeConfigWithEnvironment :: Maybe FilePath -> Maybe FilePath -> Maybe Author -> [(String, String)] -> Config
+makeConfigWithEnvironment repoPath executablePath author environment = Config {
+        configCwd = repoPath
+        ,configPath = executablePath
+        ,configAuthor = author
+        ,configEnvironment = environment
+        }
+
 makeConfig :: Maybe FilePath -> Maybe FilePath -> Maybe Author -> Config
 makeConfig repoPath executablePath author = Config {
         configCwd = repoPath
         ,configPath = executablePath
         ,configAuthor = author
+        ,configEnvironment = []
         }
+
 
 data VCSException = VCSException Int String String String [String]
     deriving (Show, Typeable)
