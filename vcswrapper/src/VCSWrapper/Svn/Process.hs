@@ -31,18 +31,15 @@ import VCSWrapper.Common.Types
 execute :: String -- ^ command name, e.g. checkout
         -> [String] -- ^ options
         -> Ctx ()
-execute commandName options = do
-        o <- svnExec commandName options []
-        case o of
-            Right _  -> return ()
-            Left err -> vcsError err commandName
+execute commandName options = svnExec commandName options [] >> return ()
+
 
 {- | Execute given svn command with given options and environment.
 -}
 svnExec :: String -- ^ svn command, e.g. checkout
         -> [String] -- ^ options
         -> [(String, String)] -- ^ environment
-        -> Ctx (Either VCSFailure String)
+        -> Ctx String
 svnExec = vcsExec "svn"
 
 

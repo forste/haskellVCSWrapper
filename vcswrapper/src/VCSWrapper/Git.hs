@@ -33,7 +33,10 @@ module VCSWrapper.Git (
 ) where
 
 import System.Directory
+
 import Control.Monad.Trans
+import qualified Control.Monad as Exc
+
 import Data.List.Utils
 
 import VCSWrapper.Git.Parsers
@@ -91,22 +94,18 @@ checkout rev branch = do
 -- modification Harald Jagenteufel
 ---------------------------------
 
-    -- | Return the status of given repo.
+-- | Return the status of given repo.
 status :: Ctx [Status]
 status = do
-    rawStatus <- gitExec "status" ["--porcelain"] []
-    case rawStatus of
-        Left err -> vcsError err "status"
-        Right status -> return $ parseStatus status
+    o <- gitExec "status" ["--porcelain"] []
+    return $ parseStatus o
 
 -- | get the log, maybe from a specific branch (defaults to the current branch)
 simpleLog :: Maybe String -> Ctx [LogEntry]
 simpleLog mbBranch = do
-        rawLog <- gitExec "log" ((branch mbBranch) ++ ["--pretty=tformat:commit:%H%n%an%n%ae%n%ai%n%s%n%b%x00", "--"]) [] -- double dash on end prevent crash if branch and filename are equal
-        case rawLog of
-            Left err -> vcsError err "log"
-            Right log -> do
-                return $ parseSimpleLog log
+    -- double dash on end prevent crash if branch and filename are equal
+    o <- gitExec "log" ((branch mbBranch) ++ ["--pretty=tformat:commit:%H%n%an%n%ae%n%ai%n%s%n%b%x00", "--"]) []
+    return $ parseSimpleLog o
     where
     branch Nothing = []
     branch (Just b) = [b]
@@ -116,19 +115,14 @@ simpleLog mbBranch = do
 localBranches :: Ctx (String, -- ^ currently checked out branch
      [String]) -- ^ all other branches
 localBranches = do
-    rawBranches <- gitExec "branch" [] []
-    case rawBranches of
-        Left err -> vcsError err "branch"
-        Right branches -> do
-            return $ parseBranches branches
+    o <- gitExec "branch" [] []
+    return $ parseBranches o
 
 -- | get all remotes
 remote :: Ctx [String]
 remote = do
-    rawRemotes <- gitExec "remote" [] []
-    case rawRemotes of
-        Left err -> vcsError err "remote"
-        Right remotes -> return $ parseRemotes remotes
+    o <- gitExec "remote" [] []
+    return $ parseRemotes o
 
 -- | push current branch to origin
 push :: Ctx ()
@@ -144,9 +138,7 @@ pull = gitExecWithoutResult "pull" [] []
 revparse :: String -> Ctx (String)
 revparse commit = do
     o <- gitExec "rev-parse" [commit] []
-    case o of
-        Left err -> vcsError err "rev-parse"
-        Right out -> return $ strip out
+    return $ strip o
 
 
 

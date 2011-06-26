@@ -105,12 +105,9 @@ revert revision = execute "merge" ["-rHEAD:"++show revision,"."]
 {- | Get log information -}
 simpleLog :: Ctx [LogEntry]
 simpleLog = do
-      o <- svnExec "log" ["--xml"] []
-      case o of
-            Right out  -> do
-                        logEntries <- liftIO $ withTempFile "log.xml" (parseLog out)
-                        return logEntries
-            Left err -> return $ vcsError err "log"
+    o <- svnExec "log" ["--xml"] []
+    logEntries <- liftIO $ withTempFile "log.xml" (parseLog o)
+    return logEntries
     where
         parseLog out path handle = do
                     hPutStrLn handle out
@@ -123,9 +120,7 @@ status :: [String] -- ^ Options, will be ignored
          -> Ctx [Status]
 status _ = do
         o <- svnExec "status" [] []
-        case o of
-            Right out  -> return $ parseStatusOut out
-            Left err -> return $ vcsError err "status"
+        return $ parseStatusOut o
 
 {- | Unlocks given files -}
 unlock :: [FilePath] -- ^ Files to unlock, must not be empty

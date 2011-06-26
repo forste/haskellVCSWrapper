@@ -11,7 +11,7 @@
 -- |
 --
 -----------------------------------------------------------------------------
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
 module VCSWrapper.Common.Types (
     VCSType(..)
     ,IsLocked
@@ -19,7 +19,7 @@ module VCSWrapper.Common.Types (
     ,Ctx(..)
     ,Config(..)
     ,Author(..)
-    ,VCSFailure
+    ,VCSException(..)
     ,Status(..)
     ,Modification(..)
     ,makeConfig
@@ -29,6 +29,8 @@ module VCSWrapper.Common.Types (
 ) where
 
 import Control.Monad.Reader
+import Data.Typeable (Typeable)
+import Control.Exception (Exception)
 
 data VCSType = SVN | GIT
     deriving (Show,Read, Eq)
@@ -91,10 +93,9 @@ makeConfig repoPath executablePath author = Config {
         ,configAuthor = author
         }
 
-type VCSFailure = (Int,
-                String,
-                String,
-                String,
-                [String]
-                )
+data VCSException = VCSException Int String String String [String]
+    deriving (Show, Typeable)
+
+instance Exception VCSException
+
 

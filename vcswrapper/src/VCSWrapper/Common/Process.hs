@@ -16,16 +16,15 @@ module VCSWrapper.Common.Process (
     vcsExec
     ,exec
     ,runVcs
-    ,vcsError
+--    ,vcsError
 ) where
-
 
 import System.Process
 import System.Exit
 import System.IO (Handle, hFlush, hClose, hGetContents, hPutStr)
 import Control.Concurrent
 import Control.Monad.Reader
-import qualified Control.Exception as C
+import qualified Control.Exception as Exc
 import VCSWrapper.Common.Types
 import Data.Maybe
 
@@ -35,7 +34,7 @@ vcsExec :: String -- ^ VCS shell-command, e.g. git
         -> String -- ^ VCS command, e.g. checkout
         -> [String] -- ^ options
         -> [(String, String)] -- ^ environment
-        -> Ctx (Either VCSFailure String)
+        -> Ctx String
 vcsExec vcsName cmd opts menv  = exec cmd opts menv vcsName configPath
 
 -- | Internal function to execute a vcs command
@@ -44,15 +43,15 @@ exec :: String -- ^ VCS command, e.g. checkout
      -> [(String, String)] -- ^ environment
      -> String -- ^ VCS shell-command, e.g. git
      -> (Config -> Maybe FilePath) -- ^ variable getter applied to content of Ctx
-     -> Ctx (Either VCSFailure String)
+     -> Ctx String
 exec cmd opts menv fallBackExecutable getter = do
     cfg <- ask
     let args = cmd : opts
     let pathToExecutable = fromMaybe fallBackExecutable (getter cfg)
     (ec, out, err) <- liftIO $ readProc (configCwd cfg) pathToExecutable args menv ""
     case ec of
-        ExitSuccess   -> return $ Right out
-        ExitFailure i -> return $ Left (i, out, err, fromMaybe "cwd not set" $ configCwd cfg, cmd : opts)
+        ExitSuccess   -> return out
+        ExitFailure i -> Exc.throw $ VCSException i out err (fromMaybe "cwd not set" $ configCwd cfg ) (cmd : opts)
 
 
 {-| Run a vcs context from a config and returns the result
@@ -61,16 +60,16 @@ runVcs :: Config -> Ctx t -> IO t
 runVcs config (Ctx a) = runReaderT a config
 
 -- | Internal function to call on failure to make a friendly error message
-vcsError :: VCSFailure -> String -> b
-vcsError err msg =
-    error $ vcsErrorToString err msg
+--vcsError :: VCSFailure -> String -> b
+--vcsError err msg =
+--    error $ vcsErrorToString err msg
 
 -- builds a friendly error message
-vcsErrorToString :: VCSFailure -> String -> String
-vcsErrorToString (exitval, stdout, stderr, mcwd, cmd) msg =
-    concat [ "vcs error ", "[cwd: ", mcwd,
-        "][exec: ", unwords cmd, "][exit: ", show exitval, "][msg: ", msg, "] ",
-        "stdout: ", stdout, " stderr: ", stderr ]
+--vcsErrorToString :: VCSFailure -> String -> String
+--vcsErrorToString (exitval, stdout, stderr, mcwd, cmd) msg =
+--    concat [ "vcs error ", "[cwd: ", mcwd,
+--        "][exec: ", unwords cmd, "][exit: ", show exitval, "][msg: ", msg, "] ",
+--        "stdout: ", stdout, " stderr: ", stderr ]
 
 -- just exec with stdin/stdout/stderr as pipes
 execProcWithPipes :: Maybe FilePath -> String -> [String] -> [(String, String)]
@@ -99,10 +98,10 @@ readProc mcwd command args menv input = do
     outMVar <- newEmptyMVar
 
     out <- hGetContents outh
-    _ <- forkIO $ C.evaluate (length out) >> putMVar outMVar ()
+    _ <- forkIO $ Exc.evaluate (length out) >> putMVar outMVar ()
 
     err <- hGetContents errh
-    _ <- forkIO $ C.evaluate (length err) >> putMVar outMVar ()
+    _ <- forkIO $ Exc.evaluate (length err) >> putMVar outMVar ()
 
     when (length input > 0) $ do hPutStr inh input; hFlush inh
     hClose inh
