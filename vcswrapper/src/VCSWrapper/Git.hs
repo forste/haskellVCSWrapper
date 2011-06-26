@@ -124,11 +124,11 @@ remote = do
     o <- gitExec "remote" [] []
     return $ parseRemotes o
 
--- | push current branch to origin
+-- | push changes to a remote
 push :: Ctx ()
 push = do
     (curBranch, _) <- localBranches
-    gitExecWithoutResult "push" ["origin", curBranch] []
+    gitExecWithoutResult "push" [] []
 
 -- | pull changes from a remote
 pull :: Ctx ()
