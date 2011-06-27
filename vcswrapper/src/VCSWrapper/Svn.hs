@@ -32,9 +32,10 @@ module VCSWrapper.Svn (
 ) where
 
 import VCSWrapper.Svn.Parsers
-import VCSWrapper.Common.TemporaryFiles
 import VCSWrapper.Svn.Process
 import VCSWrapper.Svn.Types
+
+import VCSWrapper.Common.TemporaryFiles
 import Control.Monad.Reader
 import Maybe
 import Data.List.Utils
