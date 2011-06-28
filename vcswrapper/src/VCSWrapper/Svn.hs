@@ -69,8 +69,10 @@ commit :: [FilePath]  -- ^ files to commit, may be empty if not empty only speci
                       -- ^ commited
          -> String      -- ^ message, must not be empty
          -> [String]    -- ^ options, may be empty
+         -> Maybe String -- ^ password
          -> Ctx ()
-commit rsrcs logmsg extraopts = do
+commit rsrcs logmsg extraopts mbPw = do
+
     config <- ask
     let mbAuthor = configAuthor config
 --    let authopts = [ "--username", author]
@@ -80,6 +82,8 @@ commit rsrcs logmsg extraopts = do
     where
         authopts Nothing = [""]
         authopts (Just author) =  [""] -- TODO use author here ["--username"++" "++(authorName author)]
+        pwOpts Nothing = [""]
+        pwOpts (Just pw) = ["--password",pw]
 
 -- create a new repository - TODO complete implementation
 --createRepo :: Ctx ()
