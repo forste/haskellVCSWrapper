@@ -38,7 +38,6 @@ import VCSWrapper.Svn.Types
 import VCSWrapper.Common.TemporaryFiles
 import Control.Monad.Reader
 import Maybe
-import Data.List.Utils
 import System.IO
 --
 --  SVN COMMANDS
@@ -46,68 +45,57 @@ import System.IO
 
 {- Add filepaths to repository -}
 add :: [FilePath] -- files to add
-        -> [String] -- options
+        -> Maybe String -- ^ optional password
+        -> [String]     -- ^ options
         -> Ctx ()
-add files options= execute "add" $ files++options
+add files = svnExec_ "add" files
 
 {- Checkout the index to some commit id creating potentially a branch -}
 checkout :: [(String, Maybe String)]    -- ^ list of (url, revision), must not be empty - revision must not be set
          -> Maybe String                -- ^ path
-         -> [String]                    -- ^ options
+         -> Maybe String -- ^ optional password
+         -> [String]     -- ^ options
          -> Ctx ()
-checkout repos path options = do
---    let name = "--username " ++ fromMaybe "anonymous" username ++ " " TODO comment in
-    let urls = map  (\(x,y) -> x
+checkout repos path = svnExec_ "checkout" opts
+    where
+        realPath = [fromMaybe "" path]
+        urls =  map  (\(x,y) -> x
                     ++ (if (isNothing y) then "" else "@")
                     ++ fromMaybe "" y)
                     repos
-    let realPath = [fromMaybe "" path]
-    execute "checkout" (options++urls++realPath)
+        opts = urls++realPath
 
 {- Commit changes to the repository -}
-commit :: [FilePath]  -- ^ files to commit, may be empty if not empty only specified files will be
-                      -- ^ commited
-         -> String      -- ^ message, must not be empty
-         -> [String]    -- ^ options, may be empty
-         -> Maybe String -- ^ password
+commit :: [FilePath]  -- ^ files to commit, may be empty if not empty only specified files will be commited
+         -> String       -- ^ message, must not be empty
+         -> Maybe String -- ^ optional password
+         -> [String]     -- ^ options
          -> Ctx ()
-commit rsrcs logmsg extraopts mbPw = do
-
-    config <- ask
-    let mbAuthor = configAuthor config
---    let authopts = [ "--username", author]
-    let msgopts = [ "--message", logmsg ]
-    let opts = (authopts mbAuthor) ++ msgopts ++ extraopts ++ rsrcs
-    execute "commit" opts
+commit filesToCommit logMsg = svnExec_ "commit" opts
     where
-        authopts Nothing = [""]
-        authopts (Just author) =  [""] -- TODO use author here ["--username"++" "++(authorName author)]
-        pwOpts Nothing = [""]
-        pwOpts (Just pw) = ["--password",pw]
-
--- create a new repository - TODO complete implementation
---createRepo :: Ctx ()
---createRepo = do
---    o <- svnadminExec "create" [] []
---    case o of
---        Right _ -> return ()
---        Left err -> svnError err "svnadmin create"
+        msgopts = [ "--message", logMsg ]
+        opts = msgopts ++ filesToCommit
 
 {- | Locks given files -}
-lock :: [FilePath] -- files to lock, must not be empty
-        -> String  -- lock comment, may be empty
+lock :: [FilePath]   -- ^ files to lock, must not be empty
+        -> Maybe String -- ^ optional password
+        -> [String]     -- ^ additional arguments
         -> Ctx ()
-lock files comment = do
-        execute "lock" $ files++opts
-    where
-        opts = if comment==[] then [] else [ "--message", comment]
+lock files = svnExec_ "lock" files
+
+
+
 
 {- | Revert to specific revision in current working directory -}
-revert :: Integer  -- ^ revision, e.g. 3
+revert :: Integer           -- ^ revision, e.g. 3
+        -> Maybe String -- ^ optional password
+        -> [String]     -- ^ additional arguments
         -> Ctx()
-revert revision = execute "merge" ["-rHEAD:"++show revision,"."]
+revert revision = svnExec_ "merge" ["-rHEAD:"++show revision,"."]
 
-{- | Get log information -}
+
+
+{- | Get log from the local repository -}
 simpleLog :: Ctx [LogEntry]
 simpleLog = do
     o <- svnExec "log" ["--xml"] []
@@ -119,72 +107,26 @@ simpleLog = do
                     hClose handle   -- closing handle so parseDocument can open one
                     parseDocument path
 
-{- | Get status information which will be a list of (filepath, modification-status, isLocked).
-   Options will be ignored. -}
-status :: [String] -- ^ Options, will be ignored
-         -> Ctx [Status]
-status _ = do
+{- | Get status information which will be a list of (filepath, modification-status, isLocked). -}
+status :: Ctx [Status]
+status = do
         o <- svnExec "status" [] []
         return $ parseStatusOut o
 
 {- | Unlocks given files -}
 unlock :: [FilePath] -- ^ Files to unlock, must not be empty
+          -> Maybe String -- ^ optional password
+          -> [String]     -- ^ additional arguments
           -> Ctx ()
-unlock files = do
-         execute "unlock" files
+unlock files = svnExec_ "unlock" files
 
 {- | Updates the repository -}
-update :: Ctx ()
-update = do
-        execute "update" []
+update :: Maybe String -- ^ optional password
+       -> [String]     -- ^ additional arguments
+       -> Ctx()
+update = svnExec_ "update" []
 
---
---  HELPERS
---
 
--- parses given argument. Argument is required to have same format as output from 'svn status'
-parseStatusOut :: String -> [Status]
-parseStatusOut out = parseRows rows
-        where
-            rows = init' splitRows
-            splitRows = split "\n" out :: [String]
-
-init' :: [a] -> [a]
-init' [] = []
-init' ls = init ls
-
--- parses given rows from 'svn status'. Supports only first seven columns and filename so far
-parseRows :: [String] -> [Status]
-parseRows rows = map mapRow rows
-    where
-        mapRow = \row -> SVNStatus (getFileName row) (getModification row)  (getLockStatus row)
---        {
---                                      file=(getFileName row)
---                                      ,modification=(getModification row)
---                                      ,isLocked=(getLockStatus row)
---                                   }
-        getFileName = (\row -> nFunc tail 8 row) :: String -> FilePath
-        getModification = (\row -> parseFirstCol $ row!!0) :: String -> Modification
-        getLockStatus = (\row -> parseSixthCol $ row!!5) :: String -> IsLocked
-
-nFunc :: (a -> a) -> Int -> a -> a
-nFunc _ 0 = id
-nFunc f n = f . nFunc f (n-1)
-
-parseFirstCol :: Char -> Modification
-parseFirstCol ' ' = None
-parseFirstCol 'A' = Added
-parseFirstCol 'C' = Conflicting
-parseFirstCol 'D' = Deleted
-parseFirstCol 'M' = Modified
-parseFirstCol 'R' = Replaced
-parseFirstCol '?' = Untracked
-parseFirstCol '!' = Missing
-parseFirstCol _  = Unknown
-
-parseSixthCol :: Char -> IsLocked
-parseSixthCol 'K' = True
-parseSixthCol _ = False
 
 
 

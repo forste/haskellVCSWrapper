@@ -20,18 +20,19 @@ module Main (
 import VCSWrapper.Svn
 
 main = do
+        return()
 --      parseDocument "out.xml"
-      logEntries <- runWithConfig $ simpleLog
-      putStrLn $ "LogEntries :"++show logEntries
-      stats <- runWithConfig $ status []
-      putStrLn $ "Status :"++show stats
-      runWithConfig $ commit ["file1"] "Enter commit message here." [] Nothing
-      stats <- runWithConfig $ status []
-      putStrLn $ "Status :"++show stats
-      where
-        runWithConfig = runVcs curConfig
-        curConfig = makeConfig (Just cwd) Nothing Nothing
-        cwd = "/home/n0s/project1_work4"
+--      logEntries <- runWithConfig $ simpleLog
+--      putStrLn $ "LogEntries :"++show logEntries
+--      stats <- runWithConfig $ status []
+--      putStrLn $ "Status :"++show stats
+--      runWithConfig $ commit ["file1"] "Enter commit message here." [] Nothing
+--      stats <- runWithConfig $ status []
+--      putStrLn $ "Status :"++show stats
+--      where
+--        runWithConfig = runVcs curConfig
+--        curConfig = makeConfig (Just cwd) Nothing Nothing
+--        cwd = "/home/n0s/project1_work4"
 --        url = "file:///home/n0s/svnrep/project1/trunk"
 --    putStrLn "Starting!"
 ----    runWithConfig $ checkout (Just "hans") [(url, Nothing)] (Just targetDirectory) []

@@ -14,10 +14,13 @@
 
 module VCSWrapper.Svn.Parsers (
    parseDocument
+   ,parseStatusOut
 ) where
 import Data.Maybe
 import System.Exit
 import Text.XML.HXT.Core
+import Data.List.Utils
+
 import qualified VCSWrapper.Common.Types as Common
 
 instance XmlPickler Log where
@@ -72,4 +75,50 @@ xpLogEntry =  xpWrap (\(rev,aut,dat,msg) -> LogEntry { revision = rev, author = 
                 xpElemWithText elem = xpElem elem $ xpText0
 
 
+--
+--  HELPERS
+--
 
+-- parses given argument. Argument is required to have same format as output from 'svn status'
+parseStatusOut :: String -> [Common.Status]
+parseStatusOut out = parseRows rows
+        where
+            rows = init' splitRows
+            splitRows = split "\n" out :: [String]
+
+init' :: [a] -> [a]
+init' [] = []
+init' ls = init ls
+
+-- parses given rows from 'svn status'. Supports only first seven columns and filename so far
+parseRows :: [String] -> [Common.Status]
+parseRows rows = map mapRow rows
+    where
+        mapRow = \row -> Common.SVNStatus (getFileName row) (getModification row)  (getLockStatus row)
+--        {
+--                                      file=(getFileName row)
+--                                      ,modification=(getModification row)
+--                                      ,isLocked=(getLockStatus row)
+--                                   }
+        getFileName = (\row -> nFunc tail 8 row) :: String -> FilePath
+        getModification = (\row -> parseFirstCol $ row!!0) :: String -> Common.Modification
+        getLockStatus = (\row -> parseSixthCol $ row!!5) :: String -> Common.IsLocked
+
+nFunc :: (a -> a) -> Int -> a -> a
+nFunc _ 0 = id
+nFunc f n = f . nFunc f (n-1)
+
+parseFirstCol :: Char -> Common.Modification
+parseFirstCol ' ' = Common.None
+parseFirstCol 'A' = Common.Added
+parseFirstCol 'C' = Common.Conflicting
+parseFirstCol 'D' = Common.Deleted
+parseFirstCol 'M' = Common.Modified
+parseFirstCol 'R' = Common.Replaced
+parseFirstCol '?' = Common.Untracked
+parseFirstCol '!' = Common.Missing
+parseFirstCol _  =  Common.Unknown
+
+parseSixthCol :: Char -> Common.IsLocked
+parseSixthCol 'K' = True
+parseSixthCol _ = False

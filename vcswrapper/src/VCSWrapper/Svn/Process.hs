@@ -13,21 +13,50 @@
 -----------------------------------------------------------------------------
 
 module VCSWrapper.Svn.Process (
-    execute
-    ,svnExec
+    svnExec
+    , svnExec_
+    , svnExecNoEnvir
+    , svnExecNoEnvirNoOpts
+
     , module VCSWrapper.Common.Process
 ) where
 
 import VCSWrapper.Common.Process
 import VCSWrapper.Common.Types
 
-{- | Execute given svn command with given options handling eventual errors and ignoring other output.
--}
-execute :: String -- ^ command name, e.g. checkout
-        -> [String] -- ^ options
-        -> Ctx ()
-execute commandName options = svnExec commandName options [] >> return ()
+import Control.Monad.Reader(ask)
 
+svnExec_ :: String          -- ^ cmd
+         -> [String]        -- ^ cmd specific opts
+         -> Maybe String -- ^ optional password
+         -> [String]     -- ^ additional arguments
+         -> Ctx()
+svnExec_ cmd cmdOpts pw opts =  do
+                config <- ask
+                let mbAuthor  = configAuthor config
+                let builtOpts = (pwopts pw)++(authopts mbAuthor)++opts
+                svnExecNoEnvir cmd $ builtOpts ++ cmdOpts
+                return()
+    where
+    useropts Nothing  = []
+    useropts (Just u) = ["--username",u]
+    pwopts Nothing  = []
+    pwopts (Just p) = ["--password",p]
+    authopts Nothing = []
+    authopts (Just a) =  ["--username", authorName a]
+{- | Execute given svn command with given options.
+-}
+svnExecNoEnvirNoOpts :: String  -- ^ svn command, e.g. checkout
+                     -> Ctx String
+svnExecNoEnvirNoOpts cmd = svnExecNoEnvir cmd []
+
+
+{- | Execute given svn command with given options.
+-}
+svnExecNoEnvir :: String    -- ^ svn command, e.g. checkout
+        -> [String]         -- ^ options
+        -> Ctx String
+svnExecNoEnvir cmd opts = svnExec cmd opts []
 
 {- | Execute given svn command with given options and environment.
 -}
@@ -38,8 +67,8 @@ svnExec :: String -- ^ svn command, e.g. checkout
 svnExec cmd opts = do
     let extOpts = opts++globalOpts
     vcsExec "svn" cmd extOpts
-
-globalOpts = ["--non-interactive"]++["--no-auth-cache"]
+    where
+        globalOpts = ["--non-interactive"]++["--no-auth-cache"]
 
 
 
