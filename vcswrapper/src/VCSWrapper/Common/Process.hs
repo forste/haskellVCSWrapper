@@ -59,18 +59,6 @@ exec cmd opts menv fallBackExecutable getter = do
 runVcs :: Config -> Ctx t -> IO t
 runVcs config (Ctx a) = runReaderT a config
 
--- | Internal function to call on failure to make a friendly error message
---vcsError :: VCSFailure -> String -> b
---vcsError err msg =
---    error $ vcsErrorToString err msg
-
--- builds a friendly error message
---vcsErrorToString :: VCSFailure -> String -> String
---vcsErrorToString (exitval, stdout, stderr, mcwd, cmd) msg =
---    concat [ "vcs error ", "[cwd: ", mcwd,
---        "][exec: ", unwords cmd, "][exit: ", show exitval, "][msg: ", msg, "] ",
---        "stdout: ", stdout, " stderr: ", stderr ]
-
 -- just exec with stdin/stdout/stderr as pipes
 execProcWithPipes :: Maybe FilePath -> String -> [String] -> [(String, String)]
                   -> IO (Handle, Handle, Handle, ProcessHandle)
