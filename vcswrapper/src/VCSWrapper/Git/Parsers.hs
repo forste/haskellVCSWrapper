@@ -17,9 +17,11 @@ module VCSWrapper.Git.Parsers (
     , parseBranches
     , parseRemotes
     , parseSimpleLog
+    , parsePullMergeConflict
 ) where
 
 import Data.List.Utils
+import Data.List
 
 import Text.ParserCombinators.Parsec
 
@@ -42,6 +44,9 @@ parseBranches string = (head [branchname | ('*':_:branchname) <- lines],
 
 parseRemotes :: String -> [String]
 parseRemotes = split "\n"
+
+parsePullMergeConflict :: String -> Bool
+parsePullMergeConflict s = isPrefixOf "CONFLICT" s
 
 
 parseSimpleLog :: String -> [LogEntry]

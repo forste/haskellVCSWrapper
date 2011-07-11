@@ -14,9 +14,9 @@
 
 module VCSWrapper.Common.Process (
     vcsExec
+    ,vcsExecThrowingOnError
     ,exec
     ,runVcs
---    ,vcsError
 ) where
 
 import System.Process
@@ -34,8 +34,20 @@ vcsExec :: String -- ^ VCS shell-command, e.g. git
         -> String -- ^ VCS command, e.g. checkout
         -> [String] -- ^ options
         -> [(String, String)] -- ^ environment
-        -> Ctx String
+        -> Ctx (Either VCSException String)
 vcsExec vcsName cmd opts menv  = exec cmd opts menv vcsName configPath
+
+-- | Internal function to execute a vcs command. Throws an exception if the command fails.
+vcsExecThrowingOnError :: String -- ^ VCS shell-command, e.g. git
+        -> String -- ^ VCS command, e.g. checkout
+        -> [String] -- ^ options
+        -> [(String, String)] -- ^ environment
+        -> Ctx String
+vcsExecThrowingOnError vcsName cmd opts menv = do
+    o <- vcsExec vcsName cmd opts menv
+    case o of
+        Right out -> return out
+        Left exc  -> Exc.throw exc
 
 -- | Internal function to execute a vcs command
 exec :: String -- ^ VCS command, e.g. checkout
@@ -43,15 +55,15 @@ exec :: String -- ^ VCS command, e.g. checkout
      -> [(String, String)] -- ^ environment
      -> String -- ^ VCS shell-command, e.g. git
      -> (Config -> Maybe FilePath) -- ^ variable getter applied to content of Ctx
-     -> Ctx String
+     -> Ctx (Either VCSException String)
 exec cmd opts menv fallBackExecutable getter = do
     cfg <- ask
     let args = cmd : opts
     let pathToExecutable = fromMaybe fallBackExecutable (getter cfg)
     (ec, out, err) <- liftIO $ readProc (configCwd cfg) pathToExecutable args menv ""
     case ec of
-        ExitSuccess   -> return out
-        ExitFailure i -> Exc.throw $ VCSException i out err (fromMaybe "cwd not set" $ configCwd cfg ) (cmd : opts)
+        ExitSuccess   -> return $ Right out
+        ExitFailure i -> return $ Left $ VCSException i out err (fromMaybe "cwd not set" $ configCwd cfg ) (cmd : opts)
 
 
 {-| Run a vcs context from a config and returns the result

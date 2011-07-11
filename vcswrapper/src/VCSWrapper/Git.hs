@@ -35,7 +35,7 @@ module VCSWrapper.Git (
 import System.Directory
 
 import Control.Monad.Trans
-import qualified Control.Monad as Exc
+import qualified Control.Exception as Exc
 
 import Data.List.Utils
 
@@ -46,6 +46,10 @@ import VCSWrapper.Git.Types
 import Data.Maybe
 import qualified Data.List
 import Data.String.Utils (strip)
+
+
+exit_code_merge_conflict :: Int
+exit_code_merge_conflict = 1
 
 
 {- | initialize a new repository database -}
@@ -126,13 +130,17 @@ remote = do
 
 -- | push changes to a remote
 push :: Ctx ()
-push = do
-    (curBranch, _) <- localBranches
-    gitExecWithoutResult "push" [] []
+push = gitExecWithoutResult "push" [] []
 
--- | pull changes from a remote
-pull :: Ctx ()
-pull = gitExecWithoutResult "pull" [] []
+-- | Pull changes from a remote.
+-- If a merge conflict is detected, the error message is returned, otherwise Right () is returned
+pull :: Ctx (Either String ())
+pull = do
+    o <- gitExec' "pull" [] []
+    case o of
+        Right _                             -> return $ Right ()
+        Left exc@(VCSException _ out _ _ _) -> if (parsePullMergeConflict out) then return $ Left out
+                                            else Exc.throw exc
 
 -- | call git rev-parse on a given commit
 revparse :: String -> Ctx (String)

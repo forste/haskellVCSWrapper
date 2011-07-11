@@ -15,6 +15,7 @@
 module VCSWrapper.Svn.Process (
     svnExec
     , svnExec_
+    , svnExec'
     , svnExecNoEnvir
     , svnExecNoEnvirNoOpts
 
@@ -25,6 +26,8 @@ import VCSWrapper.Common.Process
 import VCSWrapper.Common.Types
 
 import Control.Monad.Reader(ask)
+
+import qualified Control.Exception as Exc
 
 svnExec_ :: String          -- ^ cmd
          -> [String]        -- ^ cmd specific opts
@@ -66,9 +69,25 @@ svnExec :: String -- ^ svn command, e.g. checkout
         -> Ctx String
 svnExec cmd opts = do
     let extOpts = opts++globalOpts
+    vcsExecThrowingOnError "svn" cmd extOpts
+    where
+        globalOpts = ["--non-interactive"]++["--no-auth-cache"]
+
+-- | Internal function to execute a svn command. Doesn't throw an exception if the command failes,
+-- but returns an Either with exit information.
+svnExec' :: String -- ^ svn command, e.g. checkout, commit
+        -> [String] -- ^ options
+        -> [(String, String)] -- ^ environment
+        -> Ctx (Either VCSException String)
+svnExec' cmd opts = do
+    let extOpts = opts++globalOpts
     vcsExec "svn" cmd extOpts
     where
         globalOpts = ["--non-interactive"]++["--no-auth-cache"]
+
+
+
+
 
 
 
