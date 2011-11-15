@@ -9,12 +9,14 @@ maintainer:
 build-depends: MissingH -any, 
                base -any, 
                directory -any, 
-               haddock -any, haskell98 -any, 
+               haddock >=2.9.0 && < 2.9.3,
+	       haskell98 -any, 
                haskell98 -any, hxt -any, 
                libgit -any, 
                mtl -any, 
                parsec -any, 
-               process -any
+               process -any,
+	       filepath -any
 stability:
 homepage:
 package-url:

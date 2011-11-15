@@ -19,11 +19,13 @@ module VCSWrapper.Svn (
     ,commit
     ,lock
     ,revert
+    ,resolved
     ,simpleLog
     ,unlock
     ,update
     ,status
-
+    -- exposed svn helpers
+    ,getFilesInConflict
     -- executers
     ,module VCSWrapper.Svn.Process
 
@@ -39,6 +41,12 @@ import VCSWrapper.Common.TemporaryFiles
 import Control.Monad.Reader
 import Maybe
 import System.IO
+
+import Data.List.Utils(startswith)
+import Monad (filterM)
+import System.Directory(doesFileExist, getDirectoryContents)
+import System.FilePath(combine, splitFileName)
+
 --
 --  SVN COMMANDS
 --
@@ -93,7 +101,12 @@ revert :: Integer           -- ^ revision, e.g. 3
         -> Ctx()
 revert revision = svnExec_ "merge" ["-rHEAD:"++show revision,"."]
 
-
+{- | Remove 'conflicted' state on working copy files or directories.  -}
+resolved :: [FilePath]   -- ^ files to mark resolved
+        -> Maybe String -- ^ optional password
+        -> [String]     -- ^ additional arguments
+        -> Ctx()
+resolved files = svnExec_ "resolved" files
 
 {- | Get log from the local repository -}
 simpleLog :: Ctx [LogEntry]
@@ -127,6 +140,24 @@ update :: Maybe String -- ^ optional password
 update = svnExec_ "update" []
 
 
+--
+-- Exposed SVN Helpers
+--
+
+{- | Returns all files of a conflict indicated by its associated filename.
+     E.g. for file "Types.hs" this might be "Types.hs", "Types.hs.r1", "Types.hs.r2" and "Types.hs.mine" -}
+getFilesInConflict :: FilePath -> Ctx [FilePath]
+getFilesInConflict fp = do
+            config <- ask
+            let cwd = configCwd config
+            liftIO $ do
+                let file = combine (fromMaybe "" cwd) fp
+                let (fileD,fileN) = splitFileName file
+                content <- getDirectoryContents fileD
+                let contentWithD = map (\cN -> combine fileD cN) content
+                files <- filterM doesFileExist contentWithD
+                let filesToResolve = [f | f <- files, (startswith (file++".r") f) || (f == (file++".mine"))]++[file]
+                return filesToResolve
 
 
 
