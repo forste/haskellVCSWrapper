@@ -47,7 +47,7 @@ parseRemotes :: String -> [String]
 parseRemotes = split "\n"
 
 parsePullMergeConflict :: String -> Bool
-parsePullMergeConflict s = isPrefixOf "CONFLICT" s
+parsePullMergeConflict s = isInfixOf "CONFLICT" s -- TODO maybe write more robust implementation
 
 
 parseSimpleLog :: String -> [LogEntry]

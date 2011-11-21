@@ -90,8 +90,8 @@ commit rsrcs mbAuthor logmsg extraopts = do
     Returns an error message if commit was not successfull (i.e. unmerged files still exist). -}
 commitMerge :: Ctx (Either String ())
 commitMerge = do
-    gitRootDir <- gitExec "git rev-parse --show-toplevel" [] [] -- returns the root directory of the current repo
-    o <- gitExec' "commit" ["-F", (gitRootDir ++ ".git/MERGE_MSG") ] []
+    gitRootDir <- gitExec "rev-parse" ["--show-toplevel"] [] -- returns the root directory of the current repo
+    o <- gitExec' "commit" ["-F", ((strip gitRootDir) ++ "/.git/MERGE_MSG") ] []
     case o of
         Right _                             -> return $ Right ()
         Left exc@(VCSException _ out _ _ _) -> return $ Left out
@@ -151,7 +151,8 @@ pull = do
     o <- gitExec' "pull" [] []
     case o of
         Right _                             -> return $ Right ()
-        Left exc@(VCSException _ out _ _ _) -> if (parsePullMergeConflict out) then return $ Left out
+        Left exc@(VCSException _ out _ _ _) -> liftIO $ putStrLn ("caught exception: " ++ out) >>
+                                            if (parsePullMergeConflict out) then return $ Left out
                                             else Exc.throw exc
 
 -- | call git rev-parse on a given commit
@@ -160,9 +161,9 @@ revparse commit = do
     o <- gitExec "rev-parse" [commit] []
     return $ strip o
 
-mergetool :: Ctx String
-mergetool = do
-    gitExec "mergetool" ["--no-prompt"] []
+mergetool :: FilePath -> Ctx String
+mergetool fp = do
+    gitExec "mergetool" ["--no-prompt", fp] []
 
 
 
