@@ -17,11 +17,13 @@ module VCSWrapper.Git (
     , add
     , rm
     , commit
+    , commitMerge
     , checkout
     , status
     , simpleLog
     , localBranches
     , revparse
+    , mergetool
     , remote
     , pull
     , push
@@ -83,6 +85,16 @@ commit rsrcs mbAuthor logmsg extraopts = do
         let msgopts = [ "-m", logmsg ]
         let opts = authopts ++ msgopts ++ extraopts ++ [ "--" ] ++ files
         gitExecWithoutResult "commit" opts []
+
+{- | commit a merge using the default merge message (as in .git/MERGE_MSG) as commit message.
+    Returns an error message if commit was not successfull (i.e. unmerged files still exist). -}
+commitMerge :: Ctx (Either String ())
+commitMerge = do
+    gitRootDir <- gitExec "git rev-parse --show-toplevel" [] [] -- returns the root directory of the current repo
+    o <- gitExec' "commit" ["-F", (gitRootDir ++ ".git/MERGE_MSG") ] []
+    case o of
+        Right _                             -> return $ Right ()
+        Left exc@(VCSException _ out _ _ _) -> return $ Left out
 
 {- | checkout the index to some commit id creating potentially a branch -}
 checkout :: Maybe String -- ^ Commit ID
@@ -148,7 +160,9 @@ revparse commit = do
     o <- gitExec "rev-parse" [commit] []
     return $ strip o
 
-
+mergetool :: Ctx String
+mergetool = do
+    gitExec "mergetool" ["--no-prompt"] []
 
 
 

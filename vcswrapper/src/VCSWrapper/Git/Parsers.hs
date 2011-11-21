@@ -33,6 +33,7 @@ parseStatus status = [ GITStatus filepath Modified | (_:x:_:filepath) <- lines, 
         ++ [ GITStatus filepath Untracked | (x:_:_:filepath) <- lines, x == '?']
         ++ [ GITStatus filepath Added | (x:_:_:filepath) <- lines, x == 'A'] -- A only displayed in second column
         ++ [ GITStatus filepath Deleted | (x:y:_:filepath) <- lines, x == 'D' || y == 'D'] -- D flag depends on index state (both columns)
+        ++ [ GITStatus filepath Conflicting | (x:y:_:filepath) <- lines, x == 'U' || y == 'U'] -- U flag depends on both columns
         where
         lines = split "\n" status
 
