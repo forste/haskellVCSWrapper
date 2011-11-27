@@ -1,95 +1,58 @@
 name: vcswrapper
 version: 0.0.1
-cabal-version: -any
+cabal-version: >= 1.8
 build-type: Simple
-license: AllRightsReserved
-license-file: ""
-copyright:
-maintainer:
-build-depends: MissingH -any, 
-               base -any, 
-               directory -any, 
-               haddock >=2.9.0 && < 2.9.3,
-	       haskell98 -any, 
-               haskell98 -any, hxt -any, 
-               libgit -any, 
-               mtl -any, 
-               parsec -any, 
-               process -any,
-	       filepath -any
-stability:
-homepage:
-package-url:
-bug-reports:
-synopsis:
-description: .
-category:
-author:
-tested-with:
-data-files:
+license: GPL
+license-file: LICENSE
+copyright: 2011 Stephan Fortelny, Harald Jagenteufel
+maintainer: stephanfortelny at gmail.com, h.jagenteufel at gmail.com
+homepage: https://github.com/forste/haskellVCSWrapper
+bug-reports: https://github.com/forste/haskellVCSWrapper/issues
+synopsis: Wrapper for source code management systems
+description:
+    Provides simple haskell functions to call external source code management systems.
+    Currently git and vcs are supported.
+category: Development
+author: Stephan Fortelny, Harald Jagenteufel
+tested-with: GHC == 7.0
+data-files: LICENSE
 data-dir: ""
-extra-source-files:
-extra-tmp-files:
-exposed-modules: VCSWrapper.Common VCSWrapper.Git VCSWrapper.Svn
-exposed: True
-buildable: True
-build-tools:
-cpp-options:
-cc-options:
-ld-options:
-pkgconfig-depends:
-frameworks:
-c-sources:
-default-language:
-other-languages:
-default-extensions:
-other-extensions:
-extensions:
-extra-libraries:
-extra-lib-dirs:
-includes:
-install-includes:
-include-dirs:
-hs-source-dirs: src
-other-modules: VCSWrapper VCSWrapper.Svn.Types
+
+library
+    build-depends: MissingH -any,
+               base -any,
+               directory -any,
+               haddock >=2.9.0 && < 2.9.3,
+               haskell98 -any,
+               hxt -any,
+               mtl -any,
+               parsec -any,
+               process -any,
+               filepath -any
+    exposed-modules: VCSWrapper.Common VCSWrapper.Git VCSWrapper.Svn
+    other-modules: VCSWrapper VCSWrapper.Svn.Types
                VCSWrapper.Svn.Process VCSWrapper.Svn.Parsers VCSWrapper.Git.Types
                VCSWrapper.Git.Parsers VCSWrapper.Common.Types VCSWrapper.Git.Process
                VCSWrapper.Common.Process VCSWrapper.Common.TemporaryFiles
-ghc-prof-options:
-ghc-shared-options:
-ghc-options:
-hugs-options:
-nhc98-options:
-jhc-options:
- 
-executable: vcswrapper
-main-is: Main.hs
-buildable: True
-build-tools:
-cpp-options:
-cc-options:
-ld-options:
-pkgconfig-depends:
-frameworks:
-c-sources:
-default-language:
-other-languages:
-default-extensions:
-other-extensions:
-extensions:
-extra-libraries:
-extra-lib-dirs:
-includes:
-install-includes:
-include-dirs:
-hs-source-dirs: src
-other-modules: VCSWrapper VCSWrapper.Svn.Types
+    exposed: True
+    buildable: True
+    hs-source-dirs: src
+
+executable vcswrapper
+    main-is: Main.hs
+    build-depends: MissingH -any,
+               base -any,
+               directory -any,
+               haddock >=2.9.0 && < 2.9.3,
+               haskell98 -any,
+               hxt -any,
+               mtl -any,
+               parsec -any,
+               process -any,
+               filepath -any
+    buildable: True
+    hs-source-dirs: src
+    other-modules: VCSWrapper VCSWrapper.Svn.Types
                VCSWrapper.Svn.Process VCSWrapper.Svn.Parsers VCSWrapper.Git.Types
                VCSWrapper.Git.Parsers VCSWrapper.Common.Types
                VCSWrapper.Common.Process VCSWrapper.Common.TemporaryFiles
-ghc-prof-options:
-ghc-shared-options:
-ghc-options:
-hugs-options:
-nhc98-options:
-jhc-options:
