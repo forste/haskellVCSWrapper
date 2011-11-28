@@ -8,7 +8,7 @@
 -- Stability   :
 -- Portability :
 --
--- |
+-- | Provides functions to parse the output of certain Git commands.
 --
 -----------------------------------------------------------------------------
 
@@ -27,8 +27,9 @@ import Text.ParserCombinators.Parsec
 
 import VCSWrapper.Common.Types
 
-
-parseStatus :: String -> [Status]
+-- | Parse the status of a Git repo. Expects command @git status --porcelain@.
+parseStatus :: String -- ^ Output of @git status --porcelain@.
+    -> [Status] -- ^ 'Status' for each file.
 parseStatus status = [ GITStatus filepath Modified | (_:x:_:filepath) <- lines, x == 'M'] -- M only displayed in second column
         ++ [ GITStatus filepath Untracked | (x:_:_:filepath) <- lines, x == '?']
         ++ [ GITStatus filepath Added | (x:_:_:filepath) <- lines, x == 'A'] -- A only displayed in second column
@@ -36,19 +37,22 @@ parseStatus status = [ GITStatus filepath Modified | (_:x:_:filepath) <- lines, 
         where
         lines = split "\n" status
 
-parseBranches :: String -> (String, [String])
+-- | Parse the output of @git branch@.
+parseBranches :: String -> (String, [String]) -- ^ (currently checked out branch, list of all other branches)
 parseBranches string = (head [branchname | ('*':_:branchname) <- lines],
     [branchname | (' ':' ':branchname) <- lines])
     where
     lines = split "\n" string
 
+-- | Parse @git remote@.
 parseRemotes :: String -> [String]
 parseRemotes = split "\n"
 
+-- | Parse output of @git pull@ and return if the repository is in conflict state.
 parsePullMergeConflict :: String -> Bool
-parsePullMergeConflict s = isPrefixOf "CONFLICT" s
+parsePullMergeConflict s = isPrefixOf "CONFLICT" s -- TODO improve this implementation, conflict after attemted automerge is not detected.
 
-
+-- | Parse output of @git log --pretty=tformat:commit:%H%n%an%n%ae%n%ai%n%s%n%b%x00@.
 parseSimpleLog :: String -> [LogEntry]
 parseSimpleLog log =
     case parsed of
@@ -56,7 +60,7 @@ parseSimpleLog log =
         Left _ -> []
     where parsed = parse logEntries "" log
 
--- git log --pretty=tformat:"commit:%H%n%an%n%ae%n%ai%n%s%n%b%x00"
+-- | Parse a single log entry. Expects @git log --pretty=tformat:commit:%H%n%an%n%ae%n%ai%n%s%n%b%x00@
 logEntry :: Parser LogEntry
 logEntry = do
     string "commit:"
