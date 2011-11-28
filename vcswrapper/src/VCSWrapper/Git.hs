@@ -11,6 +11,7 @@
 -- | Provides high-level Git functions like @commit@, @checkout@, @status@, @log@,...
 --
 -- All functions of this module run in the 'Ctx' monad, common to all VCS.
+-- On unexpected behavior, these functions will throw a 'VCSException'.
 -----------------------------------------------------------------------------
 
 module VCSWrapper.Git (
