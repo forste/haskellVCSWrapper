@@ -8,8 +8,9 @@
 -- Stability   :  experimental
 -- Portability :
 --
--- | This module provide Git functionality exec'ing the git binary.
--- give simple access to commit, checkout, status, log.
+-- | Provides high-level Git functions like @commit@, @checkout@, @status@, @log@,...
+--
+-- All functions of this module run in the 'Ctx' monad, common to all VCS.
 -----------------------------------------------------------------------------
 
 module VCSWrapper.Git (
@@ -48,30 +49,33 @@ import qualified Data.List
 import Data.String.Utils (strip)
 
 
-exit_code_merge_conflict :: Int
-exit_code_merge_conflict = 1
-
-
-{- | initialize a new repository database -}
-initDB :: Bool -> Ctx ()
+{- | Initialize a new git repository. Executes @git init@. -}
+initDB :: Bool -- ^ if 'True', this repository will be initialized as a bare repository (appends @--bare@ to the git command)
+    -> Ctx ()
 initDB bare = do
     let opts = if bare then ["--bare"] else []
     gitExecWithoutResult "init-db" opts []
 
-{- | add filepath to repository -}
-add :: [ FilePath ] -> Ctx ()
+{- | Add files to the index. Executes @git add@. -}
+add :: [ FilePath ] -- ^ 'FilePath's to add to the index.
+    -> Ctx ()
 add paths = do
     let opts = "--" : paths
     gitExecWithoutResult "add" opts []
 
-{- | rm filepath from repository -}
-rm :: [ FilePath ] -> Ctx ()
+{- | Remove files from the index and the working directory. Executes @git rm@. -}
+rm :: [ FilePath ] -- ^ 'FilePath's to remove.
+    -> Ctx ()
 rm paths = do
     let opts = "--" : paths
     gitExecWithoutResult "rm" opts []
 
-{- | commit change to the repository with optional filepaths and optional author + email -}
-commit :: [ FilePath ] -> Maybe (String, String) -> String -> [String] -> Ctx ()
+{- | Commit the current index or the specified files to the repository. Executes @git commit@. -}
+commit :: [ FilePath ] -- ^ 'FilePath's to be commited instead of the current index. Leave empty to commit the index.
+    -> Maybe (String, String) -- ^ (Author name, email)
+    -> String -- ^ Commit message. Don't leave this empty.
+    -> [String] -- ^ Options to be passed to the git executable.
+    -> Ctx ()
 commit rsrcs mbAuthor logmsg extraopts = do
         case mbAuthor of
             Just (author, author_email) ->
@@ -84,28 +88,24 @@ commit rsrcs mbAuthor logmsg extraopts = do
         let opts = authopts ++ msgopts ++ extraopts ++ [ "--" ] ++ files
         gitExecWithoutResult "commit" opts []
 
-{- | checkout the index to some commit id creating potentially a branch -}
+{- | Checkout the index to some commit ID. Executes @git checkout@. -}
 checkout :: Maybe String -- ^ Commit ID
-        -> Maybe String -- ^ branchname
+        -> Maybe String -- ^ Branchname. If specified, @git checkout -b \<branchname\>@ will be executed.
         -> Ctx ()
 checkout rev branch = do
     let bopt = maybe [] (\b -> [ "-b", b ]) branch
-    let copt = maybeToList rev -- [] (: []) rev
+    let copt = maybeToList rev
     gitExecWithoutResult "checkout" (bopt ++ copt) []
 
-
----------------------------------
--- modification Harald Jagenteufel
----------------------------------
-
--- | Return the status of given repo.
+{- | Return status of the repository as a list of 'Status'. Executes @git status@. -}
 status :: Ctx [Status]
 status = do
     o <- gitExec "status" ["--porcelain"] []
     return $ parseStatus o
 
--- | get the log, maybe from a specific branch (defaults to the current branch)
-simpleLog :: Maybe String -> Ctx [LogEntry]
+{- | Get all commit messages. Executes @git log@. -}
+simpleLog :: Maybe String -- ^ The branch from which to get the commit messages. (If 'Nothing', the current branch will be used).
+    -> Ctx [LogEntry]
 simpleLog mbBranch = do
     -- double dash on end prevent crash if branch and filename are equal
     o <- gitExec "log" ((branch mbBranch) ++ ["--pretty=tformat:commit:%H%n%an%n%ae%n%ai%n%s%n%b%x00", "--"]) []
@@ -115,25 +115,25 @@ simpleLog mbBranch = do
     branch (Just b) = [b]
 
 
--- | get all local branches.
-localBranches :: Ctx (String, -- ^ currently checked out branch
-     [String]) -- ^ all other branches
+{- | Get all local branches. Executes @git branch@. -}
+localBranches :: Ctx (String, [String]) -- ^ (currently checked out branch, list of all other branches)
 localBranches = do
     o <- gitExec "branch" [] []
     return $ parseBranches o
 
--- | get all remotes
+{- | Get all remotes. Executes @git remote@. -}
 remote :: Ctx [String]
 remote = do
     o <- gitExec "remote" [] []
     return $ parseRemotes o
 
--- | push changes to a remote
+{- | Push changes to the remote as configured in the git configuration. Executes @git push@. -}
 push :: Ctx ()
 push = gitExecWithoutResult "push" [] []
 
--- | Pull changes from a remote.
--- If a merge conflict is detected, the error message is returned, otherwise Right () is returned
+{- | Pull changes from the remote as configured in the git configuration. If a merge conflict
+    is detected, the error message is returned, otherwise 'Right ()' is returned.
+    Executes @git pull@. -}
 pull :: Ctx (Either String ())
 pull = do
     o <- gitExec' "pull" [] []
@@ -142,8 +142,9 @@ pull = do
         Left exc@(VCSException _ out _ _ _) -> if (parsePullMergeConflict out) then return $ Left out
                                             else Exc.throw exc
 
--- | call git rev-parse on a given commit
-revparse :: String -> Ctx (String)
+{- | Rev-parse a revision. Executes @git rev-parse@. -}
+revparse :: String -- ^ Revision to pass to rev-parse.
+    -> Ctx (String)
 revparse commit = do
     o <- gitExec "rev-parse" [commit] []
     return $ strip o
