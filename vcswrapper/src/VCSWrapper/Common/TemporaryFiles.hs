@@ -8,18 +8,27 @@
 -- Stability   :
 -- Portability :
 --
--- |
+-- | Helper for temporary files.
 --
 -----------------------------------------------------------------------------
 
-module VCSWrapper.Common.TemporaryFiles where
+module VCSWrapper.Common.TemporaryFiles (
+    withTempFile
+) where
 
 import System.IO
 import System.Directory(getTemporaryDirectory, removeFile)
 import System.IO.Error(catch)
 import Control.Exception(finally)
 
-withTempFile :: String -> (FilePath -> Handle -> IO a) -> IO a
+{- |
+    Executes given function using a tempory file.
+    -}
+withTempFile :: String -- ^ Filename
+             -> (FilePath -- 'FilePath' to temporary file
+                -> Handle -- 'Handle' for temporary file
+                -> IO a) -- ^ Fn to be called
+             -> IO a
 withTempFile pattern func =
     do
        tempdir <- catch (getTemporaryDirectory) (\_ -> return ".")

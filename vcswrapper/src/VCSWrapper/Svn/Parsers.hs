@@ -8,12 +8,12 @@
 -- Stability   :
 -- Portability :
 --
--- |
+-- | Various parsers for output of svn commands.
 --
 -----------------------------------------------------------------------------
 
 module VCSWrapper.Svn.Parsers (
-   parseDocument
+   parseLogFile
    ,parseStatusOut
 ) where
 import Data.Maybe
@@ -26,15 +26,35 @@ import qualified VCSWrapper.Common.Types as Common
 instance XmlPickler Log where
     xpickle = xpLog
 
-
-parseDocument :: FilePath -> IO [Common.LogEntry]
-parseDocument document =
+{- |
+    Attempts to parse given file and returns a list of 'Common.LogEntry'.
+-}
+parseLogFile :: FilePath -- ^ File which must be the same format as the one of @svn log --xml@.
+              -> IO [Common.LogEntry]
+parseLogFile document =
             do
             logs <- runX (xunpickleDocument xpLog [ withRemoveWS yes, withValidate no] document)
             let log = head logs
             let entries = map (\(LogEntry rev aut dat msg) -> Common.LogEntry (show rev) aut "" dat msg msg)
                               (logEntries log)
             return entries
+
+{- |
+    Parses given 'String' and returns a list of 'Common.Status'.
+-}
+parseStatusOut :: String -- ^ String which is required to have same format as output from @svn status@
+            -> [Common.Status]
+parseStatusOut out = parseRows rows
+        where
+            rows = init' splitRows
+            splitRows = split "\n" out :: [String]
+
+
+--
+--  HELPERS
+--
+
+-- LogFile Helpers
 
 data Log = Log {
     logEntries :: LogEntries
@@ -74,23 +94,13 @@ xpLogEntry =  xpWrap (\(rev,aut,dat,msg) -> LogEntry { revision = rev, author = 
             where
                 xpElemWithText elem = xpElem elem $ xpText0
 
-
---
---  HELPERS
---
-
--- parses given argument. Argument is required to have same format as output from 'svn status'
-parseStatusOut :: String -> [Common.Status]
-parseStatusOut out = parseRows rows
-        where
-            rows = init' splitRows
-            splitRows = split "\n" out :: [String]
+-- StatusOut Helpers
 
 init' :: [a] -> [a]
 init' [] = []
 init' ls = init ls
 
--- parses given rows from 'svn status'. Supports only first seven columns and filename so far
+-- parses given rows from @svn status@. Supports only first seven columns and filename so far
 parseRows :: [String] -> [Common.Status]
 parseRows rows = map mapRow rows
     where

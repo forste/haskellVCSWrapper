@@ -8,7 +8,7 @@
 -- Stability   :
 -- Portability :
 --
--- | Execute a vcs command.
+-- | Functions to execute external processes and run VCS.
 --
 -----------------------------------------------------------------------------
 
@@ -28,20 +28,19 @@ import qualified Control.Exception as Exc
 import VCSWrapper.Common.Types
 import Data.Maybe
 
+{-|
+    Run a VCS 'Ctx' from a 'Config' and returns the result
+ -}
+runVcs :: Config -- ^ 'Config' for a VCS
+       -> Ctx t -- ^ An operation running in 'Ctx'
+       -> IO t
+runVcs config (Ctx a) = runReaderT a config
 
--- | Internal function to execute a vcs command
-vcsExec :: String -- ^ VCS shell-command, e.g. git
-        -> String -- ^ VCS command, e.g. checkout
-        -> [String] -- ^ options
-        -> [(String, String)] -- ^ environment
-        -> Ctx (Either VCSException String)
-vcsExec vcsName cmd opts menv  = exec cmd opts menv vcsName configPath
-
--- | Internal function to execute a vcs command. Throws an exception if the command fails.
+-- | Internal function to execute a VCS command. Throws an exception if the command fails.
 vcsExecThrowingOnError :: String -- ^ VCS shell-command, e.g. git
         -> String -- ^ VCS command, e.g. checkout
         -> [String] -- ^ options
-        -> [(String, String)] -- ^ environment
+        -> [(String, String)] -- ^ environment variables
         -> Ctx String
 vcsExecThrowingOnError vcsName cmd opts menv = do
     o <- vcsExec vcsName cmd opts menv
@@ -49,10 +48,18 @@ vcsExecThrowingOnError vcsName cmd opts menv = do
         Right out -> return out
         Left exc  -> Exc.throw exc
 
--- | Internal function to execute a vcs command
+-- | Internal function to execute a VCS command
+vcsExec :: String -- ^ VCS shell-command, e.g. git
+        -> String -- ^ VCS command, e.g. checkout
+        -> [String] -- ^ options
+        -> [(String, String)] -- ^ environment variables
+        -> Ctx (Either VCSException String)
+vcsExec vcsName cmd opts menv  = exec cmd opts menv vcsName configPath
+
+-- | Internal function to execute a VCS command
 exec :: String -- ^ VCS command, e.g. checkout
      -> [String] -- ^ options
-     -> [(String, String)] -- ^ environment
+     -> [(String, String)] -- ^ environment variables
      -> String -- ^ VCS shell-command, e.g. git
      -> (Config -> Maybe FilePath) -- ^ variable getter applied to content of Ctx
      -> Ctx (Either VCSException String)
@@ -63,27 +70,13 @@ exec cmd opts menv fallBackExecutable getter = do
     (ec, out, err) <- liftIO $ readProc (configCwd cfg) pathToExecutable args menv ""
     case ec of
         ExitSuccess   -> return $ Right out
-        ExitFailure i -> return $ Left $ VCSException i out err (fromMaybe "cwd not set" $ configCwd cfg ) (cmd : opts)
+        ExitFailure i -> return $ Left $
+            VCSException i out err (fromMaybe "cwd not set" $ configCwd cfg ) (cmd : opts)
 
-
-{-| Run a vcs context from a config and returns the result
- -}
-runVcs :: Config -> Ctx t -> IO t
-runVcs config (Ctx a) = runReaderT a config
-
--- just exec with stdin/stdout/stderr as pipes
-execProcWithPipes :: Maybe FilePath -> String -> [String] -> [(String, String)]
-                  -> IO (Handle, Handle, Handle, ProcessHandle)
-execProcWithPipes mcwd command args menv = do
-    (Just inh, Just outh, Just errh, pid) <- createProcess (proc command args)
-        { std_in = CreatePipe,
-          std_out = CreatePipe,
-          std_err = CreatePipe,
-          cwd = mcwd,
-          env = Just menv }
-    return (inh, outh, errh, pid)
-
- -- same as readProcessWithExitCode but having a configurable cwd and env,
+{- |
+    Same as 'System.Process.readProcessWithExitCode' but having a configurable working directory and
+     environment.
+-}
 readProc :: Maybe FilePath --working directory or Nothing if not set
             -> String  --command
             -> [String] --arguments
@@ -113,3 +106,18 @@ readProc mcwd command args menv input = do
 
     ex <- waitForProcess pid
     return (ex, out, err)
+
+{- |
+    Setting pipes as in 'System.Process.readProcessWithExitCode' in ' but having a configurable working directory and
+     environment.
+-}
+execProcWithPipes :: Maybe FilePath -> String -> [String] -> [(String, String)]
+                  -> IO (Handle, Handle, Handle, ProcessHandle)
+execProcWithPipes mcwd command args menv = do
+    (Just inh, Just outh, Just errh, pid) <- createProcess (proc command args)
+        { std_in = CreatePipe,
+          std_out = CreatePipe,
+          std_err = CreatePipe,
+          cwd = mcwd,
+          env = Just menv }
+    return (inh, outh, errh, pid)

@@ -8,7 +8,7 @@
 -- Stability   :
 -- Portability :
 --
--- | This module exports types and functions common to all vcs.
+-- | This module exports types and functions common to all VCS.
 --
 -----------------------------------------------------------------------------
 

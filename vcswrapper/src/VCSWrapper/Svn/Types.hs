@@ -8,7 +8,7 @@
 -- Stability   :
 -- Portability :
 --
--- |
+-- | All types defined and used by SVN.
 --
 -----------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving #-}

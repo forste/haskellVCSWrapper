@@ -8,7 +8,7 @@
 -- Stability   :
 -- Portability :
 --
--- | Defines all datatypes and accessorfunctions to use these datatypes efficiently.
+-- | Defines all types and their associated accessorfunctions.
 --
 -----------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
@@ -78,7 +78,7 @@ data LogEntry = LogEntry {
     , body :: String -- ^ Long body of the commit message.
 } deriving (Show)
 
--- | 'True', if this file locked by the VCS.
+-- | 'True', if this file is locked by the VCS.
 type IsLocked = Bool
 
 -- | Configuration of the 'Ctx' the VCS commands will be executed in.
@@ -107,7 +107,7 @@ data Author = Author
 newtype Ctx a = Ctx (ReaderT Config IO a)
     deriving (Monad, MonadIO, MonadReader Config)
 
--- | Convinience method to create a new 'Config'.
+-- | Creates a new 'Config' with a list of environment variables.
 makeConfigWithEnvironment :: Maybe FilePath -- ^ Path to the main directory of the repository. E.g. for Git: the directory of the repository containing the @.git@ config directory.
     -> Maybe FilePath -- ^ Path to the vcs executable. If 'Nothing', the PATH environment variable will be search for a matching executable.
     -> Maybe Author -- ^ Author to be used for different VCS actions. If 'Nothing', the default for the selected repository will be used.
@@ -119,7 +119,7 @@ makeConfigWithEnvironment repoPath executablePath author environment = Config {
         ,configAuthor = author
         ,configEnvironment = environment
         }
--- | Convinience method to create a new 'Config'.
+-- | Creates a new 'Config'.
 makeConfig :: Maybe FilePath -- ^ Path to the main directory of the repository. E.g. for Git: the directory of the repository containing the @.git@ config directory.
     -> Maybe FilePath -- ^ Path to the vcs executable. If 'Nothing', the PATH environment variable will be search for a matching executable.
     -> Maybe Author -- ^ Author to be used for different VCS actions. If 'Nothing', the default for the selected repository will be used.
@@ -131,7 +131,7 @@ makeConfig repoPath executablePath author = Config {
         ,configEnvironment = []
         }
 
--- | This 'Exception'-type is thrown if a VCS command failes unexpectedly.
+-- | This 'Exception'-type will be thrown if a VCS command fails unexpectedly.
 data VCSException
     -- | Exit code -> stdout -> errout -> 'configCwd' of the 'Config' -> List containing the executed command and its options
     = VCSException Int String String String [String]

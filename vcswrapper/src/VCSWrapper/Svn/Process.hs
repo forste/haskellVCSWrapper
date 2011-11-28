@@ -8,7 +8,7 @@
 -- Stability   :
 -- Portability :
 --
--- |
+-- | Functions to execute svn commands.
 --
 -----------------------------------------------------------------------------
 
