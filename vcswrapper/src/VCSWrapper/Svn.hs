@@ -29,8 +29,8 @@ module VCSWrapper.Svn (
     ,status
     -- exposed svn helpers
     ,getFilesInConflict
-    -- executers
-    ,module VCSWrapper.Svn.Process
+    -- runner
+    ,runVcs
 
     --types
     ,module VCSWrapper.Svn.Types
