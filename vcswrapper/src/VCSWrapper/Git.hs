@@ -28,7 +28,8 @@ module VCSWrapper.Git (
     , push
     --    , clone
 
-    , module VCSWrapper.Git.Process -- TODO only export useful process functions
+    -- reexport from VCSWrapper.Git.Process
+    , runVcs
 
     , module VCSWrapper.Git.Types
 ) where
