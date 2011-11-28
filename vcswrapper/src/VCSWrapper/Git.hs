@@ -1,11 +1,11 @@
 -----------------------------------------------------------------------------
 --
 -- Module      :  VCSWrapper.Git
--- Copyright   :  Copyright (C) 2009-2010 Vincent Hanquez
--- License     :  AllRightsReserved
+-- Copyright   :  2011 Stephan Fortelny, Harald Jagenteufel
+-- License     :  GPL
 --
---   Maintainer  : Vincent Hanquez <vincent@snarc.org>, modified Harald Jagenteufel
--- Stability   :  experimental
+-- Maintainer  :  stephanfortelny at gmail.com, h.jagenteufel at gmail.com
+-- Stability   :
 -- Portability :
 --
 -- | Provides high-level Git functions like @commit@, @checkout@, @status@, @log@,...
