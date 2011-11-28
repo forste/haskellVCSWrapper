@@ -11,7 +11,7 @@ bug-reports: https://github.com/forste/haskellVCSWrapper/issues
 synopsis: Wrapper for source code management systems
 description:
     Provides simple haskell functions to call external source code management systems.
-    Currently git and vcs are supported.
+    Currently git and SVN are supported.
 category: Development
 author: Stephan Fortelny, Harald Jagenteufel
 tested-with: GHC == 7.0
