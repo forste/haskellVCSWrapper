@@ -15,7 +15,7 @@ description:
 category: Development
 author: Stephan Fortelny, Harald Jagenteufel
 tested-with: GHC == 7.0
-data-files: LICENSE
+data-files: LICENSE README
 data-dir: ""
 
 library
