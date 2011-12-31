@@ -38,7 +38,8 @@ data VCSType = SVN | GIT
     deriving (Show,Read, Eq)
 
 -- | Status of a file managed by the respective VCS.
-data Status = SVNStatus FilePath Modification IsLocked | GITStatus FilePath Modification
+data Status = SVNStatus FilePath Modification IsLocked
+    | GITStatus FilePath Modification
     deriving (Show,Read)
 
 -- | Retrieve the 'FilePath' of any VCS 'Status'.
@@ -65,6 +66,7 @@ data Modification = None | -- ^ File hasn't been modified.
                     Replaced | -- ^ File has been replaced by a different file.
                     Untracked | -- ^ File is currently not known by the VCS.
                     Unknown | -- ^ State of file is unknown.
+                    Ignored | -- ^ File is ignored by VCS.
                     Missing -- ^ File is missing.
     deriving (Eq,Show,Read)
 
