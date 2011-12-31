@@ -13,14 +13,14 @@
 -----------------------------------------------------------------------------
 
 module Main (
-    main,
-    VCSWrapper.Svn.simpleLog
+    main
 ) where
 
-import VCSWrapper.Svn
+import qualified VCSWrapper.Svn as Svn
+import qualified VCSWrapper.Mercurial as Mercurial
 
-main = do
-        return()
+--main = do
+--        return()
 --      parseDocument "out.xml"
 --      logEntries <- runWithConfig $ simpleLog
 --      putStrLn $ "LogEntries :"++show logEntries
@@ -49,4 +49,22 @@ main = do
 ----    runWithConfig $ add ["file5"]
 ----    runWithConfig $ commit ["file5"] "hansi" "first haskell commit" []
 
+cwdMercurial = "/home/forste/tmp/testvcs/hgreps/fprog"
 
+{-
+main = do
+        o <- runWithConfig $ Mercurial.status
+        putStrLn $ "Status:" ++ show o
+        return()
+        where
+        runWithConfig = Mercurial.runVcs $ Mercurial.makeConfig (Just cwdMercurial) Nothing Nothing
+-}
+
+--{-
+main = do
+        o <- runWithConfig $ Mercurial.commit ["test/test1"] "Commit via Main1" []
+        putStrLn $ "Status:" ++ show o
+        return()
+        where
+        runWithConfig = Mercurial.runVcs $ Mercurial.makeConfig (Just cwdMercurial) Nothing Nothing
+---}

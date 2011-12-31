@@ -15,6 +15,8 @@
 module VCSWrapper.Mercurial.Process (
     hgExecNoEnv
     , hgExec
+
+    , module VCSWrapper.Common.Process
 ) where
 
 import VCSWrapper.Common.Process
@@ -43,7 +45,7 @@ hgExec :: String -- ^ hg command, e.g. checkout
         -> Ctx String
 hgExec cmd opts = do
     let extOpts = opts++globalOpts
-    vcsExecThrowingOnError "svn" cmd extOpts
+    vcsExecThrowingOnError "hg" cmd extOpts
     where
         globalOpts = ["--noninteractive"]
 

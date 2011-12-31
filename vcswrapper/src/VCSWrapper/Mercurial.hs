@@ -14,16 +14,20 @@
 
 module VCSWrapper.Mercurial (
     -- mercurial commands
---    add
+      addremove
 --    ,checkout
---    ,commit
+      ,commit
 --    ,lock
 --    ,mergeHeadToRevision
 --    ,resolved
 --    ,simpleLog
 --    ,unlock
 --    ,update
---    ,status
+      ,status
+
+      ,runVcs
+
+      ,module VCSWrapper.Mercurial.Types
 ) where
 
 import VCSWrapper.Mercurial.Process
@@ -33,15 +37,11 @@ import VCSWrapper.Mercurial.Types
 import Maybe
 
 {- |
-    Put files and directories under version control, scheduling them for addition to repository.
-    They will be added in next commit.. Executes @hg add@.
+    Add all new files, delete all missing files. Executes @hg addremove@.
 -}
-add :: [FilePath] -- ^ files to add
-    -> [String]     -- ^ options
+addremove :: [FilePath] -- ^ files to add
     -> Ctx ()
-add files options = hgExecNoEnv "add" opts
-    where
-    opts = options++files
+addremove files = hgExecNoEnv "addremove" files
 
 {- |
     Update the repository's working directory to the specified changeset. If
