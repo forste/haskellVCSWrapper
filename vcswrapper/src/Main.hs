@@ -19,6 +19,8 @@ module Main (
 import qualified VCSWrapper.Svn as Svn
 import qualified VCSWrapper.Mercurial as Mercurial
 
+import VCSWrapper.Mercurial.Parsers
+
 --main = do
 --        return()
 --      parseDocument "out.xml"
@@ -60,11 +62,27 @@ main = do
         runWithConfig = Mercurial.runVcs $ Mercurial.makeConfig (Just cwdMercurial) Nothing Nothing
 -}
 
---{-
+{-
 main = do
         o <- runWithConfig $ Mercurial.commit ["test/test1"] "Commit via Main1" []
         putStrLn $ "Status:" ++ show o
         return()
         where
         runWithConfig = Mercurial.runVcs $ Mercurial.makeConfig (Just cwdMercurial) Nothing Nothing
+-}
+
+
+--{-
+main = do
+        o <- runWithConfig $ Mercurial.simpleLog
+        putStrLn $ "Log:" ++ show o
+        return()
+        where
+        runWithConfig = Mercurial.runVcs $ Mercurial.makeConfig (Just cwdMercurial) Nothing Nothing
 ---}
+
+{-
+main = do
+        o <- parseLogFile "/home/forste/tmp/testvcs/hgreps/fprog/test.log"
+        putStrLn $ "Log:" ++ show o
+-}

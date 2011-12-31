@@ -20,7 +20,7 @@ module VCSWrapper.Mercurial (
 --    ,lock
 --    ,mergeHeadToRevision
 --    ,resolved
---    ,simpleLog
+      ,simpleLog
 --    ,unlock
 --    ,update
       ,status
@@ -33,7 +33,10 @@ module VCSWrapper.Mercurial (
 import VCSWrapper.Mercurial.Process
 import VCSWrapper.Mercurial.Parsers
 import VCSWrapper.Mercurial.Types
+import VCSWrapper.Common.TemporaryFiles
 
+import System.IO
+import Control.Monad.Reader
 import Maybe
 
 {- |
@@ -67,6 +70,20 @@ commit filesToCommit logMsg options = hgExecNoEnv "commit" opts
     where
         msgOpt = [ "--message", logMsg ]
         opts = msgOpt ++ options ++ filesToCommit
+
+{- |
+    Show revision history of entire repository or files. Executes @hg log@.
+-}
+simpleLog :: Ctx[LogEntry]
+simpleLog = do
+    o <- hgExec "log" ["--style", "xml"] []
+    logEntries <- liftIO $ withTempFile "log.xml" (parseLog o)
+    return logEntries
+    where
+        parseLog out path handle = do
+                    hPutStrLn handle out
+                    hClose handle   -- closing handle so parseDocument can open one
+                    parseLogFile path
 
 {- | Show changed files in the working directory as a list of 'Status'. Executes @hg status@. -}
 status :: Ctx [Status]
