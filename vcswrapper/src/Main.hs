@@ -51,7 +51,7 @@ import VCSWrapper.Mercurial.Parsers
 ----    runWithConfig $ add ["file5"]
 ----    runWithConfig $ commit ["file5"] "hansi" "first haskell commit" []
 
-cwdMercurial = "/home/forste/tmp/testvcs/hgreps/fprog"
+cwdMercurial = "/home/forste/tmp/testvcs/hgreps/repo1"
 
 {-
 main = do
@@ -74,7 +74,7 @@ main = do
 
 --{-
 main = do
-        o <- runWithConfig $ Mercurial.simpleLog
+        o <- runWithConfig $ Mercurial.simpleLog Nothing
         putStrLn $ "Log:" ++ show o
         return()
         where

@@ -39,10 +39,10 @@ parseStatus status = [ GITStatus filepath Modified | (_:x:_:filepath) <- lines, 
 
 -- | Parse the output of @git branch@.
 parseBranches :: String -> (String, [String]) -- ^ (currently checked out branch, list of all other branches)
-parseBranches string = (head [branchname | ('*':_:branchname) <- lines],
-    [branchname | (' ':' ':branchname) <- lines])
+parseBranches string = (head [branchname | ('*':_:branchname) <- lined],
+    [branchname | (' ':' ':branchname) <- lined])
     where
-    lines = split "\n" string
+    lined = lines string
 
 -- | Parse @git remote@.
 parseRemotes :: String -> [String]
@@ -71,7 +71,7 @@ logEntry = do
     subject <- wholeLine
     body <- bodyLines
     char '\n'
-    return $ LogEntry commitID author email date subject body
+    return $ LogEntry Nothing commitID author email date subject body
 
 bodyLines = manyTill anyChar (nullChar)
 

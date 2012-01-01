@@ -15,6 +15,7 @@
 module VCSWrapper.Mercurial.Parsers (
     parseStatusOut
     ,parseLogFile
+    ,parseBranches
 ) where
 
 import qualified VCSWrapper.Mercurial.Types as Common
@@ -32,6 +33,10 @@ parseStatusOut out = parseRows rows
             rows = init' splitRows
             splitRows = split "\n" out :: [String]
 
+-- | Parse the output of @hg branch -q@.
+parseBranches :: String -> [String] -- ^ list of all branches
+parseBranches string = lines string
+
 {- |
     Attempts to parse given file and returns a list of 'Common.LogEntry'.
 -}
@@ -42,7 +47,7 @@ parseLogFile document =
             logs <- runX (xunpickleDocument xpLog [ withRemoveWS yes, withValidate no] document)
             putStrLn $ "Logs: " ++ show logs
             let log = head logs
-            let entries = map (\(LogEntry rev node (email, aut) dat msg) -> Common.LogEntry node aut email dat msg msg)
+            let entries = map (\(LogEntry rev node mbBranch (email, aut) dat msg) -> Common.LogEntry mbBranch node aut email dat msg msg)
                               (logEntries log)
             return entries
 
@@ -94,6 +99,7 @@ type LogEntries = [LogEntry]
 data LogEntry = LogEntry {
     revision :: Int
     ,node :: String
+    ,branch :: Maybe String
     ,author :: Author
     , date :: Date
     , message :: Message
@@ -114,13 +120,15 @@ xpLogEntries = xpList
 
 
 xpLogEntry :: PU LogEntry
-xpLogEntry =  xpWrap (\(_,rev,nod,aut,dat,msg) ->
-                        LogEntry { revision = rev, node = nod, author = aut, date = dat, message = msg},
-                      \e -> (Nothing, revision e, node e, author e, date e, message e))
+xpLogEntry =  xpWrap (\(rev,nod,bra,par,tag,aut,dat,msg) ->
+                        LogEntry { revision = rev, node = nod, branch = bra, author = aut, date = dat, message = msg},
+                      \e -> (revision e, node e, branch e, Nothing, Nothing, author e, date e, message e))
                 $ xpElem "logentry"
-                $ xp6Tuple (xpOption $ xpElemWithText "tag")
-                           (xpAttr "revision" xpInt)
+                $ xp8Tuple (xpAttr "revision" xpInt)
                            (xpAttr "node" xpText0)
+                           (xpOption $ xpElemWithText "branch")
+                           (xpOption $ xpElemWithText "parent")
+                           (xpOption $ xpElemWithText "tag")
                            (xpAuthor)
                            (xpElemWithText "date")
                            (xpElemWithText "msg")
