@@ -34,7 +34,7 @@ import Data.Typeable (Typeable)
 import Control.Exception (Exception)
 
 -- | Available VCS types implemented in this package.
-data VCSType = SVN | GIT
+data VCSType = SVN | GIT | Mercurial
     deriving (Show,Read, Eq)
 
 -- | Status of a file managed by the respective VCS.

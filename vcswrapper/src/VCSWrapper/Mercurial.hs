@@ -15,13 +15,10 @@
 module VCSWrapper.Mercurial (
     -- mercurial commands
       addremove
---    ,checkout
       ,commit
---    ,lock
---    ,mergeHeadToRevision
---    ,resolved
+      ,pull
+      ,push
       ,simpleLog
---    ,unlock
       ,update
       ,status
 
@@ -78,6 +75,21 @@ localBranches = do
     o <- hgExec "branches" ["-q"] []
     let otherBranches =  filter (\b -> not $ b == currentBranch) $ parseBranches o
     return (currentBranch, otherBranches)
+
+{- |
+    Pull changes from a remote repository to a local one. If a merge conflict is detected, the error
+    message is returned, otherwise 'Right ()' is returned. Executes @hg pull@.
+-}
+pull :: Ctx ()
+pull = do
+    hgExecNoEnv "pull" ["--update"]
+
+{- |
+    Push changesets from the local repository to the default destination.
+-}
+push :: Ctx ()
+push = do
+    hgExecNoEnv "push" []
 
 {- |
     Show revision history of entire repository or files. Executes @hg log@.
