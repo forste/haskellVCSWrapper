@@ -34,11 +34,12 @@ import Data.Typeable (Typeable)
 import Control.Exception (Exception)
 
 -- | Available VCS types implemented in this package.
-data VCSType = SVN | GIT
+data VCSType = SVN | GIT | Mercurial
     deriving (Show,Read, Eq)
 
 -- | Status of a file managed by the respective VCS.
-data Status = SVNStatus FilePath Modification IsLocked | GITStatus FilePath Modification
+data Status = SVNStatus FilePath Modification IsLocked
+    | GITStatus FilePath Modification
     deriving (Show,Read)
 
 -- | Retrieve the 'FilePath' of any VCS 'Status'.
@@ -65,12 +66,14 @@ data Modification = None | -- ^ File hasn't been modified.
                     Replaced | -- ^ File has been replaced by a different file.
                     Untracked | -- ^ File is currently not known by the VCS.
                     Unknown | -- ^ State of file is unknown.
+                    Ignored | -- ^ File is ignored by VCS.
                     Missing -- ^ File is missing.
     deriving (Eq,Show,Read)
 
 -- | Represents a log entry in the history managed by the VCS.
 data LogEntry = LogEntry {
-    commitID :: String -- ^ Commit identifier
+    mbBranch :: Maybe String -- ^ Maybe Branchname
+    , commitID :: String -- ^ Commit identifier
     , author :: String -- ^ Author of this commit.
     , email :: String -- ^ Email address of the author.
     , date :: String -- ^ Date this log entry was created.

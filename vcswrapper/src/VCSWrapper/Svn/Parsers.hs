@@ -35,7 +35,7 @@ parseLogFile document =
             do
             logs <- runX (xunpickleDocument xpLog [ withRemoveWS yes, withValidate no] document)
             let log = head logs
-            let entries = map (\(LogEntry rev aut dat msg) -> Common.LogEntry (show rev) aut "" dat msg msg)
+            let entries = map (\(LogEntry rev aut dat msg) -> Common.LogEntry Nothing (show rev) aut "" dat msg msg)
                               (logEntries log)
             return entries
 
