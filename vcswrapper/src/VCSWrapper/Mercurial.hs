@@ -82,7 +82,8 @@ localBranches = do
 -}
 pull :: Ctx ()
 pull = do
-    hgExecNoEnv "pull" ["--update"]
+    hgExecNoEnv "pull" []
+    hgExecNoEnv "update" [] -- calling update here and not using the --update option for pull to force exception
 
 {- |
     Push changesets from the local repository to the default destination.
