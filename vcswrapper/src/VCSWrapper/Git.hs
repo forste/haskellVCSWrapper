@@ -46,6 +46,8 @@ import VCSWrapper.Git.Parsers
 import VCSWrapper.Git.Process
 import VCSWrapper.Git.Types
 
+import VCSWrapper.Common.VCSMonad (runVcs)
+
 import Data.Maybe
 import qualified Data.List
 import Data.String.Utils (strip)

@@ -40,6 +40,8 @@ import VCSWrapper.Svn.Parsers
 import VCSWrapper.Svn.Process
 import VCSWrapper.Svn.Types
 
+import VCSWrapper.Common.VCSMonad (runVcs)
+
 import VCSWrapper.Common.TemporaryFiles
 import Control.Monad.Reader
 import Maybe

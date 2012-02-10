@@ -35,6 +35,7 @@ library
                VCSWrapper.Git.Types VCSWrapper.Git.Parsers VCSWrapper.Common.Types VCSWrapper.Git.Process
                VCSWrapper.Mercurial.Process VCSWrapper.Mercurial.Types VCSWrapper.Mercurial.Parsers
                VCSWrapper.Common.Process VCSWrapper.Common.TemporaryFiles
+               VCSWrapper.Common.VCSMonad
     exposed: True
     buildable: True
     hs-source-dirs: src
@@ -58,3 +59,4 @@ executable vcswrapper
                VCSWrapper.Git.Types VCSWrapper.Git.Parsers VCSWrapper.Common.Types
                VCSWrapper.Mercurial.Process VCSWrapper.Mercurial.Types VCSWrapper.Mercurial.Parsers
                VCSWrapper.Common.Process VCSWrapper.Common.TemporaryFiles
+               VCSWrapper.Common.VCSMonad

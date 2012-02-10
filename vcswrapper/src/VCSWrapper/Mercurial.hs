@@ -32,6 +32,8 @@ import VCSWrapper.Mercurial.Parsers
 import VCSWrapper.Mercurial.Types
 import VCSWrapper.Common.TemporaryFiles
 
+import VCSWrapper.Common.VCSMonad (runVcs)
+
 import System.IO
 import Control.Monad.Reader
 import Maybe
