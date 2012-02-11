@@ -18,6 +18,7 @@ module Main (
 
 import qualified VCSWrapper.Svn as Svn
 import qualified VCSWrapper.Mercurial as Mercurial
+import qualified VCSWrapper.Darcs as Darcs
 
 import VCSWrapper.Mercurial.Parsers
 
@@ -72,13 +73,23 @@ main = do
 -}
 
 
---{-
+{-
 main = do
         o <- runWithConfig $ Mercurial.simpleLog Nothing
         putStrLn $ "Log:" ++ show o
         return()
         where
         runWithConfig = Mercurial.runVcs $ Mercurial.makeConfig (Just cwdMercurial) Nothing Nothing
+-}
+
+cwdDarcs = "/home/n0s/tmp/repo1"
+
+--{-
+main = do
+        runWithConfig $ Darcs.add ["file1"]
+        return()
+        where
+        runWithConfig = Darcs.runVcs $ Darcs.makeConfig (Just cwdDarcs) Nothing Nothing
 ---}
 
 {-
