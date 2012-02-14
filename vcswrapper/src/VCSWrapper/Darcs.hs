@@ -38,12 +38,18 @@ import Data.Maybe (fromJust, isJust)
 --
 add :: [FilePath] -> Ctx ()
 add paths = do
-    setupDarcs
-    liftIO $ runTheCommand commandControlList "add" paths
+    commonOpts <- getCommonOpts
+    liftIO $ runTheCommand commandControlList "add" (commonOpts ++ paths)
 
 
-setupDarcs :: Ctx ()
-setupDarcs = do
-    -- we have to cd to the repo directory
+
+-- -----
+-- HELPERS
+-- -----
+
+getCommonOpts :: Ctx [String]
+getCommonOpts = do
     repoDir <- asks configCwd
-    when (isJust repoDir) (liftIO $ Directory.setCurrentDirectory $ fromJust repoDir)
+    opts <- if (isJust repoDir) then (return ["--repodir=" ++ (fromJust repoDir)])
+        else return []
+    return {-"-q":-}opts
