@@ -8,7 +8,7 @@
 -- Stability   :
 -- Portability :
 --
--- | Functions to execute external processes and run VCS.
+-- | Functions to execute external processes.
 --
 -----------------------------------------------------------------------------
 
@@ -16,25 +16,16 @@ module VCSWrapper.Common.Process (
     vcsExec
     ,vcsExecThrowingOnError
     ,exec
-    ,runVcs
 ) where
 
 import System.Process
 import System.Exit
 import System.IO (Handle, hFlush, hClose, hGetContents, hPutStr)
 import Control.Concurrent
-import Control.Monad.Reader
+import Control.Monad.Reader (ask, liftIO, when)
 import qualified Control.Exception as Exc
 import VCSWrapper.Common.Types
 import Data.Maybe
-
-{-|
-    Run a VCS 'Ctx' from a 'Config' and returns the result
- -}
-runVcs :: Config -- ^ 'Config' for a VCS
-       -> Ctx t -- ^ An operation running in 'Ctx'
-       -> IO t
-runVcs config (Ctx a) = runReaderT a config
 
 -- | Internal function to execute a VCS command. Throws an exception if the command fails.
 vcsExecThrowingOnError :: String -- ^ VCS shell-command, e.g. git
