@@ -1,0 +1,10 @@
+This repository contains haskell wrappers for using various version control
+systems. Currently git, mercurial and svn are implemented.
+
+Installing:
+
+Currently you will need ghc 7.0.4 to install this package.
+
+Hackage:
+
+The package can be found on hackage: http://hackage.haskell.org/package/vcswrapper.
