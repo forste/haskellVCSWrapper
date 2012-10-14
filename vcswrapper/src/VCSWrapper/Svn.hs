@@ -44,11 +44,11 @@ import VCSWrapper.Common.VCSMonad (runVcs)
 
 import VCSWrapper.Common.TemporaryFiles
 import Control.Monad.Reader
-import Maybe
+import Data.Maybe
 import System.IO
 
 import Data.List.Utils(startswith)
-import Monad (filterM)
+import Control.Monad (filterM)
 import System.Directory(doesFileExist, getDirectoryContents)
 import System.FilePath(combine, splitFileName)
 

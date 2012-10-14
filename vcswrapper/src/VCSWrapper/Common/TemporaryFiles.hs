@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 -----------------------------------------------------------------------------
 --
 -- Module      :  VCSWrapper.Common.TemporaryFiles
@@ -18,8 +19,7 @@ module VCSWrapper.Common.TemporaryFiles (
 
 import System.IO
 import System.Directory(getTemporaryDirectory, removeFile)
-import System.IO.Error(catch)
-import Control.Exception(finally)
+import Control.Exception as E (catch, finally, SomeException)
 
 {- |
     Executes given function using a tempory file.
@@ -31,7 +31,7 @@ withTempFile :: String -- ^ Filename
              -> IO a
 withTempFile pattern func =
     do
-       tempdir <- catch (getTemporaryDirectory) (\_ -> return ".")
+       tempdir <- E.catch (getTemporaryDirectory) (\(_ :: SomeException) -> return ".")
        putStrLn $ "Obtained temporary directory: "++tempdir
        (file, handle) <- openTempFile tempdir pattern
        putStrLn $ "Opened file: "++file++", handle: "++show handle
