@@ -1,0 +1,8 @@
+language: haskell
+install:
+  - cabal install cabal-meta cabal-src
+  - cabal-meta install --force-reinstalls
+notifications:
+  irc:
+    channels: "irc.freenode.net#leksah"
+  email: true
