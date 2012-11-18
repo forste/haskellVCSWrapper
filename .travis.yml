@@ -1,6 +1,7 @@
 language: haskell
 install:
   - cabal install cabal-meta cabal-src
+script:
   - cabal-meta install --force-reinstalls
 notifications:
   irc:
