@@ -36,7 +36,7 @@ import VCSWrapper.Common.VCSMonad (runVcs)
 
 import System.IO
 import Control.Monad.Reader
-import Maybe
+import Data.Maybe
 
 {- |
     Add all new files, delete all missing files. Executes @hg addremove@.

@@ -14,9 +14,11 @@
 
 module VCSWrapper.Common (
     module VCSWrapper.Common.Types
-    ,module VCSWrapper.Common.Process
+  , module VCSWrapper.Common.VCSMonad
+  , module VCSWrapper.Common.Process
 ) where
 import VCSWrapper.Common.Types
+import VCSWrapper.Common.VCSMonad
 import VCSWrapper.Common.Process
 
 
