@@ -45,9 +45,9 @@ import VCSWrapper.Common.VCSMonad (runVcs)
 import VCSWrapper.Common.TemporaryFiles
 import Control.Monad.Reader
 import Data.Maybe
+import Data.List (isPrefixOf)
 import System.IO
 
-import Data.List.Utils(startswith)
 import Control.Monad (filterM)
 import System.Directory(doesFileExist, getDirectoryContents)
 import System.FilePath(combine, splitFileName)
@@ -186,7 +186,7 @@ getFilesInConflict fp = do
                 content <- getDirectoryContents fileD
                 let contentWithD = map (\cN -> combine fileD cN) content
                 files <- filterM doesFileExist contentWithD
-                let filesToResolve = [f | f <- files, (startswith (file++".r") f) || (f == (file++".mine"))]++[file]
+                let filesToResolve = [f | f <- files, (isPrefixOf (file++".r") f) || (f == (file++".mine"))]++[file]
                 return filesToResolve
 
 

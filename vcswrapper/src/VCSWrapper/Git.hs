@@ -40,8 +40,6 @@ import System.Directory
 import Control.Monad.Trans
 import qualified Control.Exception as Exc
 
-import Data.List.Utils
-
 import VCSWrapper.Git.Parsers
 import VCSWrapper.Git.Process
 import VCSWrapper.Git.Types
@@ -50,7 +48,7 @@ import VCSWrapper.Common.VCSMonad (runVcs)
 
 import Data.Maybe
 import qualified Data.List
-import Data.String.Utils (strip)
+import Data.Text (strip, pack, unpack)
 
 
 {- | Initialize a new git repository. Executes @git init@. -}
@@ -151,7 +149,7 @@ revparse :: String -- ^ Revision to pass to rev-parse.
     -> Ctx (String)
 revparse commit = do
     o <- gitExec "rev-parse" [commit] []
-    return $ strip o
+    return . unpack . strip $ pack o
 
 
 

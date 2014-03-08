@@ -19,9 +19,8 @@ module VCSWrapper.Mercurial.Parsers (
 ) where
 
 import qualified VCSWrapper.Mercurial.Types as Common
-import Data.List.Utils
 import Text.XML.HXT.Core
-
+import Data.List.Split (splitOn)
 
 {- |
     Parses given 'String' and returns a list of 'Status'.
@@ -31,7 +30,7 @@ parseStatusOut :: String -- ^ String which is required to have same format as ou
 parseStatusOut out = parseRows rows
         where
             rows = init' splitRows
-            splitRows = split "\n" out :: [String]
+            splitRows = splitOn "\n" out :: [String]
 
 -- | Parse the output of @hg branch -q@.
 parseBranches :: String -> [String] -- ^ list of all branches

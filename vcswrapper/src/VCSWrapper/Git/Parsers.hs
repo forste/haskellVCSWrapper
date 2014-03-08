@@ -20,8 +20,8 @@ module VCSWrapper.Git.Parsers (
     , parsePullMergeConflict
 ) where
 
-import Data.List.Utils
 import Data.List
+import Data.List.Split (splitOn)
 
 import Text.ParserCombinators.Parsec
 
@@ -35,7 +35,7 @@ parseStatus status = [ GITStatus filepath Modified | (_:x:_:filepath) <- lines, 
         ++ [ GITStatus filepath Added | (x:_:_:filepath) <- lines, x == 'A'] -- A only displayed in second column
         ++ [ GITStatus filepath Deleted | (x:y:_:filepath) <- lines, x == 'D' || y == 'D'] -- D flag depends on index state (both columns)
         where
-        lines = split "\n" status
+        lines = splitOn "\n" status
 
 -- | Parse the output of @git branch@.
 parseBranches :: String -> (String, [String]) -- ^ (currently checked out branch, list of all other branches)
@@ -46,7 +46,7 @@ parseBranches string = (head [branchname | ('*':_:branchname) <- lined],
 
 -- | Parse @git remote@.
 parseRemotes :: String -> [String]
-parseRemotes = split "\n"
+parseRemotes = splitOn "\n"
 
 -- | Parse output of @git pull@ and return if the repository is in conflict state.
 parsePullMergeConflict :: String -> Bool
