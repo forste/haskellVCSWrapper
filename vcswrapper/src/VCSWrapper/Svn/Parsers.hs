@@ -19,8 +19,7 @@ module VCSWrapper.Svn.Parsers (
 import Data.Maybe
 import System.Exit
 import Text.XML.HXT.Core
-import Data.List.Utils
-
+import Data.List.Split (splitOn)
 import qualified VCSWrapper.Common.Types as Common
 
 instance XmlPickler Log where
@@ -47,7 +46,7 @@ parseStatusOut :: String -- ^ String which is required to have same format as ou
 parseStatusOut out = parseRows rows
         where
             rows = init' splitRows
-            splitRows = split "\n" out :: [String]
+            splitRows = splitOn "\n" out :: [String]
 
 
 --
