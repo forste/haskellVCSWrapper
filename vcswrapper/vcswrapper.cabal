@@ -5,7 +5,7 @@ build-type: Simple
 license: GPL
 license-file: LICENSE
 copyright: 2011 Stephan Fortelny, Harald Jagenteufel
-maintainer: stephanfortelny at gmail.com, h.jagenteufel at gmail.com
+maintainer: stephanfortelny at gmail.com, h.jagenteufel at gmail.com, hamish.k.mackenzie at gmail.com
 homepage: https://github.com/forste/haskellVCSWrapper
 bug-reports: https://github.com/forste/haskellVCSWrapper/issues
 synopsis: Wrapper for source code management systems
@@ -13,7 +13,7 @@ description:
     Provides simple haskell functions to call external source code management systems.
     Currently git and SVN are supported.
 category: Development
-author: Stephan Fortelny, Harald Jagenteufel
+author: Stephan Fortelny, Harald Jagenteufel, Hamish Mackenzie
 tested-with: GHC == 7.0
 data-files: LICENSE README
 data-dir: .
