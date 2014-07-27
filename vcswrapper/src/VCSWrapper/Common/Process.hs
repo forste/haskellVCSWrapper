@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 --
 -- Module      :  VCSWrapper.Common.Process
@@ -26,13 +27,16 @@ import Control.Monad.Reader (ask, liftIO, when)
 import qualified Control.Exception as Exc
 import VCSWrapper.Common.Types
 import Data.Maybe
+import Data.Text (Text)
+import qualified Data.Text as T (null, unpack, pack)
+import Control.Monad (unless)
 
 -- | Internal function to execute a VCS command. Throws an exception if the command fails.
-vcsExecThrowingOnError :: String -- ^ VCS shell-command, e.g. git
-        -> String -- ^ VCS command, e.g. checkout
-        -> [String] -- ^ options
-        -> [(String, String)] -- ^ environment variables
-        -> Ctx String
+vcsExecThrowingOnError :: FilePath -- ^ VCS shell-command, e.g. git
+        -> Text -- ^ VCS command, e.g. checkout
+        -> [Text] -- ^ options
+        -> [(Text, Text)] -- ^ environment variables
+        -> Ctx Text
 vcsExecThrowingOnError vcsName cmd opts menv = do
     o <- vcsExec vcsName cmd opts menv
     case o of
@@ -40,20 +44,20 @@ vcsExecThrowingOnError vcsName cmd opts menv = do
         Left exc  -> Exc.throw exc
 
 -- | Internal function to execute a VCS command
-vcsExec :: String -- ^ VCS shell-command, e.g. git
-        -> String -- ^ VCS command, e.g. checkout
-        -> [String] -- ^ options
-        -> [(String, String)] -- ^ environment variables
-        -> Ctx (Either VCSException String)
+vcsExec :: FilePath -- ^ VCS shell-command, e.g. git
+        -> Text -- ^ VCS command, e.g. checkout
+        -> [Text] -- ^ options
+        -> [(Text, Text)] -- ^ environment variables
+        -> Ctx (Either VCSException Text)
 vcsExec vcsName cmd opts menv  = exec cmd opts menv vcsName configPath
 
 -- | Internal function to execute a VCS command
-exec :: String -- ^ VCS command, e.g. checkout
-     -> [String] -- ^ options
-     -> [(String, String)] -- ^ environment variables
-     -> String -- ^ VCS shell-command, e.g. git
+exec :: Text -- ^ VCS command, e.g. checkout
+     -> [Text] -- ^ options
+     -> [(Text, Text)] -- ^ environment variables
+     -> FilePath -- ^ VCS shell-command, e.g. git
      -> (Config -> Maybe FilePath) -- ^ variable getter applied to content of Ctx
-     -> Ctx (Either VCSException String)
+     -> Ctx (Either VCSException Text)
 exec cmd opts menv fallBackExecutable getter = do
     cfg <- ask
     let args = cmd : opts
@@ -69,14 +73,14 @@ exec cmd opts menv fallBackExecutable getter = do
      environment.
 -}
 readProc :: Maybe FilePath --working directory or Nothing if not set
-            -> String  --command
-            -> [String] --arguments
-            -> [(String, String)] --environment can be empty
-            -> String --input can be empty
-            -> IO (ExitCode, String, String)
+            -> FilePath  --command
+            -> [Text] --arguments
+            -> [(Text, Text)] --environment can be empty
+            -> Text --input can be empty
+            -> IO (ExitCode, Text, Text)
 readProc mcwd command args menv input = do
     putStrLn $ "Executing process, mcwd: "++show mcwd++", command: "++command++
-                ",args: "++show args++",menv: "++show menv++", input"++input
+                ",args: "++show args++",menv: "++show menv++", input"++T.unpack input
     (inh, outh, errh, pid) <- execProcWithPipes mcwd command args menv
 
     outMVar <- newEmptyMVar
@@ -87,7 +91,7 @@ readProc mcwd command args menv input = do
     err <- hGetContents errh
     _ <- forkIO $ Exc.evaluate (length err) >> putMVar outMVar ()
 
-    when (length input > 0) $ do hPutStr inh input; hFlush inh
+    unless (T.null input) $ do hPutStr inh (T.unpack input); hFlush inh
     hClose inh
 
     takeMVar outMVar
@@ -96,20 +100,20 @@ readProc mcwd command args menv input = do
     hClose errh
 
     ex <- waitForProcess pid
-    return (ex, out, err)
+    return (ex, T.pack out, T.pack err)
 
 
 {- |
     Setting pipes as in 'System.Process.readProcessWithExitCode' in ' but having a configurable working directory and
      environment.
 -}
-execProcWithPipes :: Maybe FilePath -> String -> [String] -> [(String, String)]
+execProcWithPipes :: Maybe FilePath -> FilePath -> [Text] -> [(Text, Text)]
                   -> IO (Handle, Handle, Handle, ProcessHandle)
 execProcWithPipes mcwd command args menv = do
-    (Just inh, Just outh, Just errh, pid) <- createProcess (proc command args)
+    (Just inh, Just outh, Just errh, pid) <- createProcess (proc command (map T.unpack args))
         { std_in = CreatePipe,
           std_out = CreatePipe,
           std_err = CreatePipe,
           cwd = mcwd,
-          env = Just menv }
+          env = Just (map (\(k,v) -> (T.unpack k, T.unpack v)) menv) }
     return (inh, outh, errh, pid)

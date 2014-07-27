@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 --
 -- Module      :  VCSWrapper.Mercurial.Parsers
@@ -21,20 +23,23 @@ module VCSWrapper.Mercurial.Parsers (
 import qualified VCSWrapper.Mercurial.Types as Common
 import Text.XML.HXT.Core
 import Data.List.Split (splitOn)
+import Data.Text (Text)
+import qualified Data.Text as T (pack, unpack, lines, splitOn)
+import Control.Applicative ((<$>))
 
 {- |
-    Parses given 'String' and returns a list of 'Status'.
+    Parses given 'Text' and returns a list of 'Status'.
 -}
-parseStatusOut :: String -- ^ String which is required to have same format as output from @svn status@
+parseStatusOut :: Text -- ^ Text which is required to have same format as output from @svn status@
             -> [Common.Status]
 parseStatusOut out = parseRows rows
         where
             rows = init' splitRows
-            splitRows = splitOn "\n" out :: [String]
+            splitRows = T.splitOn "\n" out :: [Text]
 
 -- | Parse the output of @hg branch -q@.
-parseBranches :: String -> [String] -- ^ list of all branches
-parseBranches string = lines string
+parseBranches :: Text -> [Text] -- ^ list of all branches
+parseBranches string = T.lines string
 
 {- |
     Attempts to parse given file and returns a list of 'Common.LogEntry'.
@@ -56,7 +61,7 @@ init' [] = []
 init' ls = init ls
 
 -- parses given rows from @hg status@. Supports only first seven columns and filename so far
-parseRows :: [String] -> [Common.Status]
+parseRows :: [Text] -> [Common.Status]
 parseRows rows = map mapRow rows
     where
         mapRow = \row -> Common.GITStatus (getFileName row) (getModification row)
@@ -65,8 +70,8 @@ parseRows rows = map mapRow rows
 --                                      ,modification=(getModification row)
 --                                      ,isLocked=(getLockStatus row)
 --                                   }
-        getFileName = (\row -> nFunc tail 2 row) :: String -> FilePath
-        getModification = (\row -> parseFirstCol $ row!!0) :: String -> Common.Modification
+        getFileName = (\row -> nFunc tail 2 $ T.unpack row) :: Text -> FilePath
+        getModification = (\row -> parseFirstCol $ T.unpack row!!0) :: Text -> Common.Modification
 
 
 
@@ -97,16 +102,16 @@ type LogEntries = [LogEntry]
 
 data LogEntry = LogEntry {
     revision :: Int
-    ,node :: String
-    ,branch :: Maybe String
+    ,node :: Text
+    ,branch :: Maybe Text
     ,author :: Author
     , date :: Date
     , message :: Message
     } deriving (Show, Read)
 
-type Author = (String, String)
-type Date = String
-type Message = String
+type Author = (Text, Text)
+type Date = Text
+type Message = Text
 
 xpLog :: PU Log
 xpLog = xpWrap (\l -> Log l, \l -> (logEntries l))
@@ -120,8 +125,8 @@ xpLogEntries = xpList
 
 xpLogEntry :: PU LogEntry
 xpLogEntry =  xpWrap (\(rev,nod,bra,par,tag,aut,dat,msg) ->
-                        LogEntry { revision = rev, node = nod, branch = bra, author = aut, date = dat, message = msg},
-                      \e -> (revision e, node e, branch e, Nothing, Nothing, author e, date e, message e))
+                        LogEntry { revision = rev, node = T.pack nod, branch = T.pack <$> bra, author = aut, date = T.pack dat, message = T.pack msg},
+                      \e -> (revision e, T.unpack $ node e, T.unpack <$> branch e, Nothing, Nothing, author e, T.unpack $ date e, T.unpack $ message e))
                 $ xpElem "logentry"
                 $ xp8Tuple (xpAttr "revision" xpInt)
                            (xpAttr "node" xpText0)
@@ -136,8 +141,10 @@ xpLogEntry =  xpWrap (\(rev,nod,bra,par,tag,aut,dat,msg) ->
 
 
 xpAuthor :: PU Author
-xpAuthor = xpWrap (id, id)
+xpAuthor = xpWrap (packPair, unpackPair)
             $ xpElem "author"
             $ xpPair (xpAttr "email" xpText0)
                      (xpText0)
-
+    where
+        packPair (a, b) = (T.pack a, T.pack b)
+        unpackPair (a, b) = (T.unpack a, T.unpack b)

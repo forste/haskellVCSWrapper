@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 --
 -- Module      :  VCSWrapper.Common.TemporaryFiles
@@ -24,7 +25,7 @@ import Control.Exception as E (catch, finally, SomeException)
 {- |
     Executes given function using a tempory file.
     -}
-withTempFile :: String -- ^ Filename
+withTempFile :: FilePath -- ^ Filename
              -> (FilePath -- 'FilePath' to temporary file
                 -> Handle -- 'Handle' for temporary file
                 -> IO a) -- ^ Fn to be called

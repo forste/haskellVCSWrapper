@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 --
 -- Module      :  Process
@@ -28,11 +29,12 @@ import VCSWrapper.Common.Types
 import Control.Monad.Reader(ask)
 
 import qualified Control.Exception as Exc
+import Data.Text (Text)
 
-svnExec_ :: String          -- ^ cmd
-         -> [String]        -- ^ cmd specific opts
-         -> Maybe String -- ^ optional password
-         -> [String]     -- ^ additional arguments
+svnExec_ :: Text          -- ^ cmd
+         -> [Text]        -- ^ cmd specific opts
+         -> Maybe Text -- ^ optional password
+         -> [Text]     -- ^ additional arguments
          -> Ctx()
 svnExec_ cmd cmdOpts pw opts =  do
                 config <- ask
@@ -49,24 +51,24 @@ svnExec_ cmd cmdOpts pw opts =  do
     authopts (Just a) =  ["--username", authorName a]
 {- | Execute given svn command with given options.
 -}
-svnExecNoEnvirNoOpts :: String  -- ^ svn command, e.g. checkout
-                     -> Ctx String
+svnExecNoEnvirNoOpts :: Text  -- ^ svn command, e.g. checkout
+                     -> Ctx Text
 svnExecNoEnvirNoOpts cmd = svnExecNoEnvir cmd []
 
 
 {- | Execute given svn command with given options.
 -}
-svnExecNoEnvir :: String    -- ^ svn command, e.g. checkout
-        -> [String]         -- ^ options
-        -> Ctx String
+svnExecNoEnvir :: Text    -- ^ svn command, e.g. checkout
+        -> [Text]         -- ^ options
+        -> Ctx Text
 svnExecNoEnvir cmd opts = svnExec cmd opts []
 
 {- | Execute given svn command with given options and environment.
 -}
-svnExec :: String -- ^ svn command, e.g. checkout
-        -> [String] -- ^ options
-        -> [(String, String)] -- ^ environment
-        -> Ctx String
+svnExec :: Text -- ^ svn command, e.g. checkout
+        -> [Text] -- ^ options
+        -> [(Text, Text)] -- ^ environment
+        -> Ctx Text
 svnExec cmd opts = do
     let extOpts = opts++globalOpts
     vcsExecThrowingOnError "svn" cmd extOpts
@@ -75,10 +77,10 @@ svnExec cmd opts = do
 
 -- | Internal function to execute a svn command. Doesn't throw an exception if the command failes,
 -- but returns an Either with exit information.
-svnExec' :: String -- ^ svn command, e.g. checkout, commit
-        -> [String] -- ^ options
-        -> [(String, String)] -- ^ environment
-        -> Ctx (Either VCSException String)
+svnExec' :: Text -- ^ svn command, e.g. checkout, commit
+        -> [Text] -- ^ options
+        -> [(Text, Text)] -- ^ environment
+        -> Ctx (Either VCSException Text)
 svnExec' cmd opts = do
     let extOpts = opts++globalOpts
     vcsExec "svn" cmd extOpts

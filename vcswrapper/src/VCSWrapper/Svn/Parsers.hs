@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 --
 -- Module      :  VCSWrapper.Svn.Parsers
@@ -21,6 +22,8 @@ import System.Exit
 import Text.XML.HXT.Core
 import Data.List.Split (splitOn)
 import qualified VCSWrapper.Common.Types as Common
+import Data.Text (Text)
+import qualified Data.Text as T (unpack, pack, splitOn)
 
 instance XmlPickler Log where
     xpickle = xpLog
@@ -34,19 +37,19 @@ parseLogFile document =
             do
             logs <- runX (xunpickleDocument xpLog [ withRemoveWS yes, withValidate no] document)
             let log = head logs
-            let entries = map (\(LogEntry rev aut dat msg) -> Common.LogEntry Nothing (show rev) aut "" dat msg msg)
+            let entries = map (\(LogEntry rev aut dat msg) -> Common.LogEntry Nothing (T.pack $ show rev) aut "" dat msg msg)
                               (logEntries log)
             return entries
 
 {- |
-    Parses given 'String' and returns a list of 'Common.Status'.
+    Parses given 'Text' and returns a list of 'Common.Status'.
 -}
-parseStatusOut :: String -- ^ String which is required to have same format as output from @svn status@
+parseStatusOut :: Text -- ^ Text which is required to have same format as output from @svn status@
             -> [Common.Status]
 parseStatusOut out = parseRows rows
         where
             rows = init' splitRows
-            splitRows = splitOn "\n" out :: [String]
+            splitRows = T.splitOn "\n" out :: [Text]
 
 
 --
@@ -68,9 +71,9 @@ data LogEntry = LogEntry {
     , message :: Message
     } deriving (Show, Read)
 
-type Author = String
-type Date = String
-type Message = String
+type Author = Text
+type Date = Text
+type Message = Text
 
 xpLog :: PU Log
 xpLog = xpWrap (\l -> Log l, \l -> (logEntries l)) $
@@ -83,8 +86,8 @@ xpLogEntries = xpList $
 
 
 xpLogEntry :: PU LogEntry
-xpLogEntry =  xpWrap (\(rev,aut,dat,msg) -> LogEntry { revision = rev, author = aut, date = dat, message = msg},
-                                                         \e -> (revision e, author e, date e, message e)) $
+xpLogEntry =  xpWrap (\(rev,aut,dat,msg) -> LogEntry { revision = rev, author = T.pack aut, date = T.pack dat, message = T.pack msg},
+                                                         \e -> (revision e, T.unpack $ author e, T.unpack $ date e, T.unpack $ message e)) $
               xpElem "logentry" $
               xp4Tuple    (xpAttr "revision" xpInt)
                           (xpElemWithText "author")
@@ -100,7 +103,7 @@ init' [] = []
 init' ls = init ls
 
 -- parses given rows from @svn status@. Supports only first seven columns and filename so far
-parseRows :: [String] -> [Common.Status]
+parseRows :: [Text] -> [Common.Status]
 parseRows rows = map mapRow rows
     where
         mapRow = \row -> Common.SVNStatus (getFileName row) (getModification row)  (getLockStatus row)
@@ -109,9 +112,9 @@ parseRows rows = map mapRow rows
 --                                      ,modification=(getModification row)
 --                                      ,isLocked=(getLockStatus row)
 --                                   }
-        getFileName = (\row -> nFunc tail 8 row) :: String -> FilePath
-        getModification = (\row -> parseFirstCol $ row!!0) :: String -> Common.Modification
-        getLockStatus = (\row -> parseSixthCol $ row!!5) :: String -> Common.IsLocked
+        getFileName = (\row -> nFunc tail 8 $ T.unpack row) :: Text -> FilePath
+        getModification = (\row -> parseFirstCol $ T.unpack row!!0) :: Text -> Common.Modification
+        getLockStatus = (\row -> parseSixthCol $ T.unpack row!!5) :: Text -> Common.IsLocked
 
 nFunc :: (a -> a) -> Int -> a -> a
 nFunc _ 0 = id

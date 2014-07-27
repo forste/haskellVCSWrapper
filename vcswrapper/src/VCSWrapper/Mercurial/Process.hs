@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 --
 -- Module      :  VCSWrapper.Mercurial.Process
@@ -22,9 +23,10 @@ module VCSWrapper.Mercurial.Process (
 import VCSWrapper.Common.Process
 import VCSWrapper.Mercurial.Types
 import Control.Monad.Reader(ask)
+import Data.Text (Text)
 
-hgExecNoEnv :: String          -- ^ cmd
-         -> [String]      -- ^ opts
+hgExecNoEnv :: Text          -- ^ cmd
+         -> [Text]      -- ^ opts
          -> Ctx()
 hgExecNoEnv cmd options =  do
                 config <- ask
@@ -39,10 +41,10 @@ hgExecNoEnv cmd options =  do
 {- |
     Execute given hg command with given options and environment.
 -}
-hgExec :: String -- ^ hg command, e.g. checkout
-        -> [String] -- ^ options
-        -> [(String, String)] -- ^ environment
-        -> Ctx String
+hgExec :: Text -- ^ hg command, e.g. checkout
+        -> [Text] -- ^ options
+        -> [(Text, Text)] -- ^ environment
+        -> Ctx Text
 hgExec cmd opts = do
     let extOpts = opts++globalOpts
     vcsExecThrowingOnError "hg" cmd extOpts
