@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 --
 -- Module      :  VCSWrapper.Mercurial
@@ -37,21 +38,23 @@ import VCSWrapper.Common.VCSMonad (runVcs)
 import System.IO
 import Control.Monad.Reader
 import Data.Maybe
+import Data.Text (Text)
+import qualified Data.Text as T (unpack, pack)
 
 {- |
     Add all new files, delete all missing files. Executes @hg addremove@.
 -}
 addremove :: [FilePath] -- ^ files to add
     -> Ctx ()
-addremove files = hgExecNoEnv "addremove" files
+addremove files = hgExecNoEnv "addremove" (map T.pack files)
 
 {- |
     Update the repository's working directory to the specified changeset. If
     no changeset is specified, update to the tip of the current named branch.
     Executes @hg checkout@.
 -}
-checkout :: Maybe String -- ^ optional changeset
-         -> [String]     -- ^ options
+checkout :: Maybe Text -- ^ optional changeset
+         -> [Text]     -- ^ options
          -> Ctx ()
 checkout mbChangeset options = hgExecNoEnv "checkout" opts
     where
@@ -62,16 +65,16 @@ checkout mbChangeset options = hgExecNoEnv "checkout" opts
     Commit the specified files or all outstanding changes. Executes @hg commit@.
 -}
 commit :: [FilePath]  -- ^ files to commit. List may be empty - if not only specified files will be commited
-         -> String       -- ^ message, can be empty
-         -> [String]     -- ^ options
+         -> Text       -- ^ message, can be empty
+         -> [Text]     -- ^ options
          -> Ctx ()
 commit filesToCommit logMsg options = hgExecNoEnv "commit" opts
     where
         msgOpt = [ "--message", logMsg ]
-        opts = msgOpt ++ options ++ filesToCommit
+        opts = msgOpt ++ options ++ (map T.pack filesToCommit)
 
 {- | Get all local branches. Executes @hg branches@. -}
-localBranches :: Ctx (String, [String]) -- ^ (currently checked out branch, list of all other branches)
+localBranches :: Ctx (Text, [Text]) -- ^ (currently checked out branch, list of all other branches)
 localBranches = do
     currentBranch <- hgExec "branch" [] []
     o <- hgExec "branches" ["-q"] []
@@ -97,7 +100,7 @@ push = do
 {- |
     Show revision history of entire repository or files. Executes @hg log@.
 -}
-simpleLog :: Maybe String -- ^ Show the specified revision or range or branch
+simpleLog :: Maybe Text -- ^ Show the specified revision or range or branch
           -> Ctx[LogEntry]
 simpleLog mbRev = do
     o <- hgExec "log" opts []
@@ -108,7 +111,7 @@ simpleLog mbRev = do
         rev (Just revision) = ["-r",revision]
         opts = ["--style", "xml"] ++ (rev mbRev)
         parseLog out path handle = do
-                    hPutStrLn handle out
+                    hPutStrLn handle (T.unpack out)
                     hClose handle   -- closing handle so parseDocument can open one
                     parseLogFile path
 
@@ -124,7 +127,7 @@ status = do
     Update the repository's working directory to the specified changeset. If
     no changeset is specified, update to the tip of the current named branch.
 -}
-update :: Maybe String
+update :: Maybe Text
        -> Ctx ()
 update mbRev = hgExecNoEnv "update" opts
       where

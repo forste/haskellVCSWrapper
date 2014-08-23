@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 --
 -- Module      :  Common.Types
@@ -11,7 +13,6 @@
 -- | Defines all types and their associated accessorfunctions.
 --
 -----------------------------------------------------------------------------
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, DeriveDataTypeable #-}
 module VCSWrapper.Common.Types (
     VCSType(..)
     ,IsLocked
@@ -32,6 +33,8 @@ module VCSWrapper.Common.Types (
 import Control.Monad.Reader
 import Data.Typeable (Typeable)
 import Control.Exception (Exception)
+import Data.Text (Text)
+import Control.Applicative (Applicative)
 
 -- | Available VCS types implemented in this package.
 data VCSType = SVN | GIT | Mercurial
@@ -72,13 +75,13 @@ data Modification = None | -- ^ File hasn't been modified.
 
 -- | Represents a log entry in the history managed by the VCS.
 data LogEntry = LogEntry {
-    mbBranch :: Maybe String -- ^ Maybe Branchname
-    , commitID :: String -- ^ Commit identifier
-    , author :: String -- ^ Author of this commit.
-    , email :: String -- ^ Email address of the author.
-    , date :: String -- ^ Date this log entry was created.
-    , subject :: String -- ^ Short commit message.
-    , body :: String -- ^ Long body of the commit message.
+    mbBranch :: Maybe Text -- ^ Maybe Branchname
+    , commitID :: Text -- ^ Commit identifier
+    , author :: Text -- ^ Author of this commit.
+    , email :: Text -- ^ Email address of the author.
+    , date :: Text -- ^ Date this log entry was created.
+    , subject :: Text -- ^ Short commit message.
+    , body :: Text -- ^ Long body of the commit message.
 } deriving (Show)
 
 -- | 'True', if this file is locked by the VCS.
@@ -89,13 +92,13 @@ data Config = Config
     { configCwd :: Maybe FilePath -- ^ Path to the main directory of the repository. E.g. for Git: the directory of the repository containing the @.git@ config directory.
     , configPath :: Maybe FilePath -- ^ Path to the vcs executable. If 'Nothing', the PATH environment variable will be search for a matching executable.
     , configAuthor :: Maybe Author -- ^ Author to be used for different VCS actions. If 'Nothing', the default for the selected repository will be used.
-    , configEnvironment :: [(String, String)] -- ^ List of environment variables mappings passed to the underlying VCS executable.
+    , configEnvironment :: [(Text, Text)] -- ^ List of environment variables mappings passed to the underlying VCS executable.
     } deriving (Show, Read)
 
 -- | Author to be passed to VCS commands where applicable.
 data Author = Author
-    { authorName :: String -- ^ Name of the author.
-    , authorEmail :: Maybe String -- ^ Email address of the author.
+    { authorName :: Text -- ^ Name of the author.
+    , authorEmail :: Maybe Text -- ^ Email address of the author.
     } deriving (Show, Read)
 
 {- | Context for all VCS commands.
@@ -108,13 +111,13 @@ data Author = Author
     >    runVcs config $ initDB False
 -}
 newtype Ctx a = Ctx (ReaderT Config IO a)
-    deriving (Monad, MonadIO, MonadReader Config)
+    deriving (Functor, Applicative, Monad, MonadIO, MonadReader Config)
 
 -- | Creates a new 'Config' with a list of environment variables.
 makeConfigWithEnvironment :: Maybe FilePath -- ^ Path to the main directory of the repository. E.g. for Git: the directory of the repository containing the @.git@ config directory.
     -> Maybe FilePath -- ^ Path to the vcs executable. If 'Nothing', the PATH environment variable will be search for a matching executable.
     -> Maybe Author -- ^ Author to be used for different VCS actions. If 'Nothing', the default for the selected repository will be used.
-    -> [(String, String)] -- ^ List of environment variables mappings passed to the underlying VCS executable.
+    -> [(Text, Text)] -- ^ List of environment variables mappings passed to the underlying VCS executable.
     -> Config
 makeConfigWithEnvironment repoPath executablePath author environment = Config {
         configCwd = repoPath
@@ -137,7 +140,7 @@ makeConfig repoPath executablePath author = Config {
 -- | This 'Exception'-type will be thrown if a VCS command fails unexpectedly.
 data VCSException
     -- | Exit code -> stdout -> errout -> 'configCwd' of the 'Config' -> List containing the executed command and its options
-    = VCSException Int String String String [String]
+    = VCSException Int Text Text FilePath [Text]
     deriving (Show, Typeable)
 
 instance Exception VCSException

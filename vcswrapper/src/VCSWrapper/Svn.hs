@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 -----------------------------------------------------------------------------
 --
 -- Module      :  Svn
@@ -14,7 +16,6 @@
 -- On unexpected behavior, these functions will throw a 'VCSException'.
 -- All functions will be executed with options @--non-interactive@ and @--no-auth-cache@ set.
 -----------------------------------------------------------------------------
-{-# LANGUAGE ScopedTypeVariables #-}
 module VCSWrapper.Svn (
     -- svn commands
     add
@@ -51,6 +52,9 @@ import System.IO
 import Control.Monad (filterM)
 import System.Directory(doesFileExist, getDirectoryContents)
 import System.FilePath(combine, splitFileName)
+import Data.Text (Text)
+import qualified Data.Text as T (unpack, pack)
+import Data.Monoid ((<>))
 
 --
 --  SVN COMMANDS
@@ -61,25 +65,25 @@ import System.FilePath(combine, splitFileName)
     They will be added in next commit.. Executes @svn add@.
 -}
 add :: [FilePath] -- ^ files to add
-        -> Maybe String -- ^ optional password
-        -> [String]     -- ^ options
+        -> Maybe Text -- ^ optional password
+        -> [Text]     -- ^ options
         -> Ctx ()
-add files = svnExec_ "add" files
+add files = svnExec_ "add" (map T.pack files)
 
 {- |
     Checkout out a working copy from a repository. Executes @svn checkout@.
 -}
-checkout :: [(String, Maybe String)]    -- ^ list of (url, 'Maybe' revision). List must not be empty, however revision need not to be set
-         -> Maybe String                -- ^ optional path
-         -> Maybe String -- ^ optional password
-         -> [String]     -- ^ options
+checkout :: [(Text, Maybe Text)]    -- ^ list of (url, 'Maybe' revision). List must not be empty, however revision need not to be set
+         -> Maybe Text                -- ^ optional path
+         -> Maybe Text -- ^ optional password
+         -> [Text]     -- ^ options
          -> Ctx ()
 checkout repos path = svnExec_ "checkout" opts
     where
         realPath = [fromMaybe "" path]
         urls =  map  (\(x,y) -> x
-                    ++ (if (isNothing y) then "" else "@")
-                    ++ fromMaybe "" y)
+                    <> (if (isNothing y) then "" else "@")
+                    <> fromMaybe "" y)
                     repos
         opts = urls++realPath
 
@@ -87,24 +91,24 @@ checkout repos path = svnExec_ "checkout" opts
     Send changes from your working copy to the repository. Executes @svn commit@.
 -}
 commit :: [FilePath]  -- ^ files to commit. List may be empty - if not only specified files will be commited
-         -> String       -- ^ message, can be empty
-         -> Maybe String -- ^ optional password
-         -> [String]     -- ^ options
+         -> Text       -- ^ message, can be empty
+         -> Maybe Text -- ^ optional password
+         -> [Text]     -- ^ options
          -> Ctx ()
 commit filesToCommit logMsg = svnExec_ "commit" opts
     where
         msgopts = [ "--message", logMsg ]
-        opts = msgopts ++ filesToCommit
+        opts = msgopts ++ (map T.pack filesToCommit)
 
 {- |
     Lock working copy paths or URLs in the repository, so that no other user can commit changes to
     them. Executes @svn lock@.
 -}
 lock :: [FilePath]   -- ^ Files to lock, must not be empty
-        -> Maybe String -- ^ optional password
-        -> [String]     -- ^ options
+        -> Maybe Text -- ^ optional password
+        -> [Text]     -- ^ options
         -> Ctx ()
-lock files = svnExec_ "lock" files
+lock files = svnExec_ "lock" (map T.pack files)
 
 
 
@@ -113,19 +117,19 @@ lock files = svnExec_ "lock" files
     Reverts working copy to given revision. Executes @svn merge -rHEAD:$revision .@.
 -}
 mergeHeadToRevision :: Integer           -- ^ revision, e.g. 3
-                    -> Maybe String -- ^ optional password
-                    -> [String]     -- ^ options
+                    -> Maybe Text -- ^ optional password
+                    -> [Text]     -- ^ options
                     -> Ctx()
-mergeHeadToRevision revision = svnExec_ "merge" ["-rHEAD:"++show revision,"."]
+mergeHeadToRevision revision = svnExec_ "merge" ["-rHEAD:"<>(T.pack $ show revision),"."]
 
 {- |
     Remove @conflicted@ state on working copy files or directories. Executes @svn resolved@.
  -}
 resolved :: [FilePath]   -- ^ files or directories to mark resolved
-        -> Maybe String -- ^ optional password
-        -> [String]     -- ^ options
+        -> Maybe Text -- ^ optional password
+        -> [Text]     -- ^ options
         -> Ctx()
-resolved files = svnExec_ "resolved" files
+resolved files = svnExec_ "resolved" (map T.pack files)
 
 {- |
     Get the log messages for the current working copy. Executes @svn log@.
@@ -137,7 +141,7 @@ simpleLog = do
     return logEntries
     where
         parseLog out path handle = do
-                    hPutStrLn handle out
+                    hPutStrLn handle (T.unpack out)
                     hClose handle   -- closing handle so parseDocument can open one
                     parseLogFile path
 
@@ -153,16 +157,16 @@ status = do
     Unlock working copy paths or URLs. Executes @svn unlock@.
 -}
 unlock :: [FilePath] -- ^ Files to unlock, must not be empty
-          -> Maybe String -- ^ optional password
-          -> [String]     -- ^ options
+          -> Maybe Text -- ^ optional password
+          -> [Text]     -- ^ options
           -> Ctx ()
-unlock files = svnExec_ "unlock" files
+unlock files = svnExec_ "unlock" (map T.pack files)
 
 {- |
     Bring changes from the repository into the working copy. Executes @svn update@.
 -}
-update :: Maybe String -- ^ optional password
-       -> [String]     -- ^ options
+update :: Maybe Text -- ^ optional password
+       -> [Text]     -- ^ options
        -> Ctx()
 update = svnExec_ "update" []
 

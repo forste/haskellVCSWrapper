@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 --
 -- Module      :  VCSWrapper.Git
@@ -48,7 +49,9 @@ import VCSWrapper.Common.VCSMonad (runVcs)
 
 import Data.Maybe
 import qualified Data.List
-import Data.Text (strip, pack, unpack)
+import Data.Text (Text)
+import qualified Data.Text as T (strip, pack)
+import Data.Monoid ((<>))
 
 
 {- | Initialize a new git repository. Executes @git init@. -}
@@ -63,27 +66,27 @@ add :: [ FilePath ] -- ^ 'FilePath's to add to the index.
     -> Ctx ()
 add paths = do
     let opts = "--" : paths
-    gitExecWithoutResult "add" opts []
+    gitExecWithoutResult "add" (map T.pack opts) []
 
 {- | Remove files from the index and the working directory. Executes @git rm@. -}
 rm :: [ FilePath ] -- ^ 'FilePath's to remove.
     -> Ctx ()
 rm paths = do
-    let opts = "--" : paths
+    let opts = "--" : map T.pack paths
     gitExecWithoutResult "rm" opts []
 
 {- | Commit the current index or the specified files to the repository. Executes @git commit@. -}
 commit :: [ FilePath ] -- ^ 'FilePath's to be commited instead of the current index. Leave empty to commit the index.
-    -> Maybe (String, String) -- ^ (Author name, email)
-    -> String -- ^ Commit message. Don't leave this empty.
-    -> [String] -- ^ Options to be passed to the git executable.
+    -> Maybe (Text, Text) -- ^ (Author name, email)
+    -> Text -- ^ Commit message. Don't leave this empty.
+    -> [Text] -- ^ Options to be passed to the git executable.
     -> Ctx ()
 commit rsrcs mbAuthor logmsg extraopts = do
         case mbAuthor of
             Just (author, author_email) ->
-                commit' rsrcs logmsg extraopts ["--author", author ++ " <" ++ author_email ++ ">"]
+                commit' (map T.pack rsrcs) logmsg extraopts ["--author", author <> " <" <> author_email <> ">"]
             Nothing ->
-                commit' rsrcs logmsg extraopts []
+                commit' (map T.pack rsrcs) logmsg extraopts []
     where
     commit' files logmsg extraopts authopts = do
         let msgopts = [ "-m", logmsg ]
@@ -91,8 +94,8 @@ commit rsrcs mbAuthor logmsg extraopts = do
         gitExecWithoutResult "commit" opts []
 
 {- | Checkout the index to some commit ID. Executes @git checkout@. -}
-checkout :: Maybe String -- ^ Commit ID
-        -> Maybe String -- ^ Branchname. If specified, @git checkout -b \<branchname\>@ will be executed.
+checkout :: Maybe Text -- ^ Commit ID
+        -> Maybe Text -- ^ Branchname. If specified, @git checkout -b \<branchname\>@ will be executed.
         -> Ctx ()
 checkout rev branch = do
     let bopt = maybe [] (\b -> [ "-b", b ]) branch
@@ -106,7 +109,7 @@ status = do
     return $ parseStatus o
 
 {- | Get all commit messages. Executes @git log@. -}
-simpleLog :: Maybe String -- ^ The branch from which to get the commit messages. (If 'Nothing', the current branch will be used).
+simpleLog :: Maybe Text -- ^ The branch from which to get the commit messages. (If 'Nothing', the current branch will be used).
     -> Ctx [LogEntry]
 simpleLog mbBranch = do
     -- double dash on end prevent crash if branch and filename are equal
@@ -118,13 +121,13 @@ simpleLog mbBranch = do
 
 
 {- | Get all local branches. Executes @git branch@. -}
-localBranches :: Ctx (String, [String]) -- ^ (currently checked out branch, list of all other branches)
+localBranches :: Ctx (Text, [Text]) -- ^ (currently checked out branch, list of all other branches)
 localBranches = do
     o <- gitExec "branch" [] []
     return $ parseBranches o
 
 {- | Get all remotes. Executes @git remote@. -}
-remote :: Ctx [String]
+remote :: Ctx [Text]
 remote = do
     o <- gitExec "remote" [] []
     return $ parseRemotes o
@@ -136,7 +139,7 @@ push = gitExecWithoutResult "push" [] []
 {- | Pull changes from the remote as configured in the git configuration. If a merge conflict
     is detected, the error message is returned, otherwise 'Right ()' is returned.
     Executes @git pull@. -}
-pull :: Ctx (Either String ())
+pull :: Ctx (Either Text ())
 pull = do
     o <- gitExec' "pull" [] []
     case o of
@@ -145,11 +148,11 @@ pull = do
                                             else Exc.throw exc
 
 {- | Rev-parse a revision. Executes @git rev-parse@. -}
-revparse :: String -- ^ Revision to pass to rev-parse.
-    -> Ctx (String)
+revparse :: Text -- ^ Revision to pass to rev-parse.
+    -> Ctx (Text)
 revparse commit = do
     o <- gitExec "rev-parse" [commit] []
-    return . unpack . strip $ pack o
+    return $ T.strip o
 
 
 
