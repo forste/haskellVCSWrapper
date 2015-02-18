@@ -20,6 +20,7 @@ module VCSWrapper.Common.Process (
 ) where
 
 import System.Process
+import System.Environment (getEnvironment)
 import System.Exit
 import System.IO (Handle, hFlush, hClose, hGetContents, hPutStr)
 import Control.Concurrent
@@ -27,8 +28,10 @@ import Control.Monad.Reader (ask, liftIO, when)
 import qualified Control.Exception as Exc
 import VCSWrapper.Common.Types
 import Data.Maybe
+import Data.Monoid (mconcat)
 import Data.Text (Text)
 import qualified Data.Text as T (null, unpack, pack)
+import qualified Data.Map.Strict as Map
 import Control.Monad (unless)
 
 -- | Internal function to execute a VCS command. Throws an exception if the command fails.
@@ -104,16 +107,27 @@ readProc mcwd command args menv input = do
 
 
 {- |
+    Combines the given environment variables and the environment variables of the current process, with the
+    given environment variables taking priority in the case of a conflict.
+-}
+inheritCurrentEnvironment :: [(Text, Text)] -> IO [(String, String)]
+inheritCurrentEnvironment menv = do
+    currentEnv <- getEnvironment
+    let menv' = map (\(k,v) -> (T.unpack k, T.unpack v)) menv
+    return . Map.toList . mconcat $ map Map.fromList [menv', currentEnv]
+
+{- |
     Setting pipes as in 'System.Process.readProcessWithExitCode' in ' but having a configurable working directory and
      environment.
 -}
 execProcWithPipes :: Maybe FilePath -> FilePath -> [Text] -> [(Text, Text)]
                   -> IO (Handle, Handle, Handle, ProcessHandle)
 execProcWithPipes mcwd command args menv = do
+    env' <- inheritCurrentEnvironment menv
     (Just inh, Just outh, Just errh, pid) <- createProcess (proc command (map T.unpack args))
         { std_in = CreatePipe,
           std_out = CreatePipe,
           std_err = CreatePipe,
           cwd = mcwd,
-          env = Just (map (\(k,v) -> (T.unpack k, T.unpack v)) menv) }
+          env = Just env' }
     return (inh, outh, errh, pid)
