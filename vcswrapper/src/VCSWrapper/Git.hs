@@ -24,6 +24,7 @@ module VCSWrapper.Git (
     , status
     , simpleLog
     , localBranches
+    , localBranchesSafe
     , revparse
     , remote
     , pull
@@ -125,6 +126,12 @@ localBranches :: Ctx (Text, [Text]) -- ^ (currently checked out branch, list of 
 localBranches = do
     o <- gitExec "branch" [] []
     return $ parseBranches o
+
+{- | Safe version of localBranches. Get all local branches. Executes @git branch@. -}
+localBranchesSafe :: Ctx (Either VCSException (Text, [Text]))  -- ^ (currently checked out branch, list of all other branches)
+localBranchesSafe = do
+    o <- gitExec' "branch" [] []
+    return $ fmap parseBranches o
 
 {- | Get all remotes. Executes @git remote@. -}
 remote :: Ctx [Text]
