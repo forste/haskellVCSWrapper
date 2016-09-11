@@ -88,8 +88,6 @@ readProc :: Maybe FilePath --working directory or Nothing if not set
             -> Text --input can be empty
             -> IO (ExitCode, Text, Text)
 readProc mcwd command args menv input = do
-    putStrLn $ "Executing process, mcwd: "++show mcwd++", command: "++command++
-                ",args: "++show args++",menv: "++show menv++", input"++T.unpack input
     (inh, outh, errh, pid) <- execProcWithPipes mcwd command args menv
 
     outMVar <- newEmptyMVar
