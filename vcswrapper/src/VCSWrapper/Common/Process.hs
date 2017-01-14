@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 --
@@ -33,6 +34,7 @@ import Data.Text (Text)
 import qualified Data.Text as T (null, unpack, pack)
 import qualified Data.Map.Strict as Map
 import Control.Monad (unless)
+import Control.Exception (IOException, try)
 
 -- | Internal function to execute a VCS command. Throws an exception if the command fails.
 vcsExecThrowingOnError :: FilePath -- ^ VCS shell-command, e.g. git
@@ -65,11 +67,15 @@ exec cmd opts menv fallBackExecutable getter = do
     cfg <- ask
     let args = cmd : opts
     let pathToExecutable = fromMaybe fallBackExecutable (getter cfg)
-    (ec, out, err) <- liftIO $ readProc (configCwd cfg) pathToExecutable args menv ""
-    case ec of
-        ExitSuccess   -> return $ Right out
-        ExitFailure i -> return $ Left $
-            VCSException i out err (fromMaybe "cwd not set" $ configCwd cfg ) (cmd : opts)
+    eRes <- liftIO . try $ readProc (configCwd cfg) pathToExecutable args menv ""
+    let workingDir = fromMaybe "cwd not set" $ configCwd cfg
+    case eRes of
+        Left (exception :: IOException) -> return $ Left (VCSException 1 "" "" workingDir (cmd : opts))
+        Right (ec, out, err) ->
+            case ec of
+                ExitSuccess   -> return $ Right out
+                ExitFailure i -> return $ Left $
+                    VCSException i out err workingDir (cmd : opts)
 
 {- |
     Same as 'System.Process.readProcessWithExitCode' but having a configurable working directory and
@@ -82,8 +88,6 @@ readProc :: Maybe FilePath --working directory or Nothing if not set
             -> Text --input can be empty
             -> IO (ExitCode, Text, Text)
 readProc mcwd command args menv input = do
-    putStrLn $ "Executing process, mcwd: "++show mcwd++", command: "++command++
-                ",args: "++show args++",menv: "++show menv++", input"++T.unpack input
     (inh, outh, errh, pid) <- execProcWithPipes mcwd command args menv
 
     outMVar <- newEmptyMVar
